@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RefundOS — AI Operations Layer for Shopify</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#0d0d0b;--ink2:#2a2a28;--ink3:#6a6a65;--ink4:#aaaaaa;--ink5:#e0e0e0;
+  --surf:#ffffff;--surf2:#FAFAFA;--surf3:#ebebec;--dark:#09090B;
+  --g:#1c4a2e;--gm:#2e6e46;--gl:#d4eede;--gb:#4aaa78;
+  --am:#9e4d08;--al:#fff0e0;--re:#bf2929;--rl:#fde6e6;
+  --bd:rgba(0,0,0,.07);--bdm:rgba(0,0,0,.12);--bds:rgba(0,0,0,.2);
+  --W:1260px;
+  --ease-out-expo:cubic-bezier(.16,1,.3,1);
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
+}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1}
+html{scroll-behavior:auto}
+body{font-family:'Inter',sans-serif;background:#fff;color:var(--ink);overflow-x:hidden;-webkit-font-smoothing:antialiased;line-height:1.6;text-rendering:optimizeLegibility}
+
+.pill{display:inline-block;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);border:1px solid var(--bdm);border-radius:100px;padding:5px 15px;margin-bottom:28px}
+.pill.lt{color:rgba(255,255,255,.38);border-color:rgba(255,255,255,.15)}
+h2.hl{font-family:'Inter',sans-serif;font-size:clamp(36px,3.2vw,52px);font-weight:600;line-height:1.1;letter-spacing:-.3px;color:var(--ink);margin-bottom:16px}
+h2.hl.wh{color:#fff}h2.hl.wh em{color:var(--gb);text-shadow:0 0 20px rgba(74,170,120,.5)}h2.hl em{font-style:italic;color:var(--gb)}
+.lede{font-size:16px;font-weight:300;color:var(--ink3);line-height:1.8;max-width:480px}
+.rv{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
+.rv.in{opacity:1;transform:none}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}
+.btn-dark{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;border:none;border-radius:11px;padding:16px 30px;font-size:15px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;text-decoration:none;transition:all .3s cubic-bezier(.4,0,.2,1)}
+.btn-dark:hover{opacity:.88;transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.btn-dark:active{transform:translateY(0) scale(.97);transition-duration:.1s}
+.btn-out{display:inline-flex;align-items:center;gap:8px;background:transparent;color:var(--ink2);border:1px solid var(--bds);border-radius:11px;padding:16px 26px;font-size:15px;font-weight:400;font-family:'Inter',sans-serif;cursor:pointer;text-decoration:none;transition:all .3s cubic-bezier(.4,0,.2,1)}
+.btn-out:hover{background:var(--surf2);border-color:var(--bdm);transform:translateY(-2px)}
+.btn-out:active{transform:translateY(0) scale(.97);transition-duration:.1s}
+.ico{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:300;height:72px;display:flex;align-items:center;padding:0 64px;background:rgba(255,255,255,.94);backdrop-filter:blur(20px) saturate(1.3);border-bottom:1px solid var(--bd)}
+.nav-logo{font-family:'Inter',sans-serif;font-size:21px;font-weight:600;color:var(--ink);text-decoration:none;letter-spacing:-.2px}
+.nav-logo em{font-style:italic;color:var(--gb)}
+.nav-mid{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:36px;list-style:none}
+.nav-mid a{font-size:14px;font-weight:400;color:var(--ink3);text-decoration:none;transition:color .3s cubic-bezier(.4,0,.2,1)}
+.nav-mid a:hover{color:var(--ink)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.nav-login{font-size:14px;color:var(--ink3);text-decoration:none;transition:color .15s}
+.nav-login:hover{color:var(--ink)}
+.nav-cta{background:var(--ink);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;text-decoration:none;transition:opacity .15s}
+.nav-cta:hover{opacity:.82;transform:translateY(-1px)}
+.nav-cta{transition:all .25s cubic-bezier(.4,0,.2,1)}
+.nav-cta:active{transform:translateY(0) scale(.95);transition-duration:.1s}
+
+.hero{height:94vh;min-height:600px;padding:0 80px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;background:linear-gradient(160deg,#ffffff 0%,#fbfdfb 35%,#f7faf7 65%,#f9fcf9 100%);text-align:center}
+.hero-grid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(0,0,0,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.025) 1px,transparent 1px);background-size:12px 12px;mask-image:radial-gradient(ellipse 88% 82% at 50% 40%,black 15%,transparent 70%)}
+.hero-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 65% 55% at var(--gx,50%) var(--gy,38%),rgba(74,170,120,.22) 0%,transparent 65%)}
+.hero-inner{position:relative;z-index:1;max-width:var(--W);width:100%;display:flex;flex-direction:column;align-items:center}
+.hero-pill{position:relative;display:inline-flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--bdm);border-radius:100px;padding:5px 16px 5px 6px;font-size:13px;color:var(--ink2);margin-bottom:28px;margin-top:48px;animation:fu .5s ease both;z-index:1}
+.sonar-wrap{position:relative;width:22px;height:22px;flex-shrink:0}
+.sonar-dot{position:absolute;inset:0;margin:auto;width:9px;height:9px;background:var(--gb);border-radius:50%;z-index:2}
+.sonar-ring{position:absolute;inset:0;margin:auto;width:9px;height:9px;border-radius:50%;background:var(--gb);animation:sonar 2s ease-out infinite}
+.sonar-ring:nth-child(2){animation-delay:.5s}
+.sonar-ring:nth-child(3){animation-delay:1s}
+@keyframes sonar{0%{transform:scale(1);opacity:.7}100%{transform:scale(3.2);opacity:0}}
+.hero-h1{font-family:'Inter',sans-serif;font-size:clamp(42px,4vw,62px);font-weight:700;line-height:1.12;letter-spacing:-.5px;color:var(--ink);margin-bottom:22px;animation:fu .5s .08s ease both}
+.hero-h1 em{font-style:italic;color:var(--gb)}
+.hero-h1 .dim{color:var(--ink4);position:relative;display:inline-block}
+.hero-h1 .dim::after{content:'';position:absolute;left:-2px;right:-2px;top:53%;height:3px;background:var(--re);transform:translateY(-50%) rotate(-1deg);border-radius:2px}
+.tw-wrap{display:inline-block;position:relative}
+.tw-word{font-style:italic;color:var(--gb);border-right:3px solid var(--gb);padding-right:3px;white-space:nowrap;animation:blink-cursor .7s step-end infinite}
+@keyframes blink-cursor{50%{border-color:transparent}}
+.hero-sub{font-size:18px;font-weight:300;color:var(--ink3);line-height:1.8;max-width:560px;margin:0 auto 30px;animation:fu .5s .16s ease both}
+.hero-btns{display:flex;gap:10px;align-items:center;justify-content:center;animation:fu .5s .22s ease both}
+.hero-note{font-size:13px;color:var(--ink4);margin-top:14px;animation:fu .5s .28s ease both}
+.hero-proof{display:flex;gap:56px;justify-content:center;margin-top:36px;padding-top:28px;border-top:1px solid var(--bd);width:100%;max-width:700px;animation:fu .5s .34s ease both}
+.hp-n{font-family:'Inter',sans-serif;font-size:23px;font-weight:600;color:var(--ink);letter-spacing:-.5px;line-height:1;font-variant-numeric:tabular-nums}
+.hp-n em{color:var(--gb);font-style:normal;margin-left:2px}
+.hp-l{font-size:12px;color:var(--ink4);margin-top:4px}
+
+.stats-sec{padding:72px 80px;background:var(--surf2);border-top:1px solid var(--bd)}
+.stats-grid{max-width:var(--W);margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--bd);border-radius:18px;overflow:hidden;background:var(--bd);gap:1px}
+.stat-cell{background:#fff;padding:38px 34px}
+.stat-n{font-family:'Inter',sans-serif;font-size:36px;font-weight:600;letter-spacing:-1px;color:var(--ink);line-height:1;margin-bottom:10px;font-variant-numeric:tabular-nums}
+.stat-n em{color:var(--gb);font-style:normal;letter-spacing:0;margin-left:2px}
+.stat-d{font-size:14px;color:var(--ink2);line-height:1.55;max-width:170px}
+
+.prob-sec{background:#fff;padding:120px 80px}
+.prob-hdr{max-width:var(--W);margin:0 auto;margin-bottom:60px}
+.prob-layout{max-width:var(--W);margin:0 auto;display:grid;grid-template-columns:55fr 42fr;gap:64px;align-items:start}
+.prob-list{display:flex;flex-direction:column;gap:10px}
+.prob-card{background:#fff;border:1px solid var(--bd);border-radius:16px;padding:22px 26px;display:grid;grid-template-columns:42px 1fr;gap:14px;transition:border-color .2s,box-shadow .2s}
+.prob-card:hover{border-color:var(--bdm);box-shadow:0 6px 24px rgba(0,0,0,.06);transform:translateY(-2px)}
+.prob-card{transition:border-color .25s ease,box-shadow .35s cubic-bezier(.4,0,.2,1),transform .35s cubic-bezier(.4,0,.2,1)}
+.prob-ico{width:40px;height:40px;border-radius:10px;background:var(--rl);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.prob-t{font-size:15px;font-weight:500;margin-bottom:4px}
+.prob-d{font-size:13px;color:var(--ink3);line-height:1.65}
+.prob-aside{background:#1e1e1e;border-radius:22px;padding:40px 36px;position:sticky;top:84px;color:#fff}
+.pa-eye{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:rgba(255,255,255,.7);margin-bottom:10px;font-weight:500}
+.pa-big{font-family:'Inter',sans-serif;font-size:64px;font-weight:600;letter-spacing:-2px;color:var(--gb);line-height:1;margin-bottom:8px}
+.pa-sub{font-size:14px;color:rgba(255,255,255,.72);line-height:1.65;margin-bottom:32px}
+.pa-rows{border-top:1px solid rgba(255,255,255,.1);padding-top:24px;display:flex;flex-direction:column;gap:13px}
+.pa-row{display:flex;justify-content:space-between;font-size:13px}
+.pa-k{color:rgba(255,255,255,.65)}.pa-v{font-weight:500}
+.pa-v.bad{color:#f87171}.pa-v.good{color:var(--gb)}
+.pa-sep{height:1px;background:rgba(255,255,255,.09)}
+.pa-slot{display:inline-block;overflow:hidden;vertical-align:bottom;height:1em;position:relative}
+.pa-slot-inner{display:flex;flex-direction:column;transition:transform .8s cubic-bezier(.16,1,.3,1)}
+.pa-slot-digit{display:block;text-align:center;line-height:1}
+.pa-val-wrap{display:inline-block;overflow:hidden;vertical-align:middle;height:1.2em;position:relative}
+.pa-val-inner{display:flex;flex-direction:column;transition:transform .7s cubic-bezier(.16,1,.3,1)}
+.pa-val-item{display:block;line-height:1.2}
+
+.how-sec{background:var(--surf2);padding:120px 80px}
+.how-hdr{max-width:var(--W);margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:56px}
+.steps-row{max-width:var(--W);margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--bd);border-radius:20px;overflow:hidden;background:var(--bd);gap:1px}
+.step-cell{background:#fff;padding:44px 40px;position:relative}
+.step-n{font-family:'Inter',sans-serif;font-size:72px;font-weight:700;color:var(--surf3);line-height:1;position:absolute;top:20px;right:20px;user-select:none;pointer-events:none;letter-spacing:-2px}
+.step-ico{width:44px;height:44px;border-radius:12px;background:var(--surf2);display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+.step-t{font-size:17px;font-weight:500;margin-bottom:10px}
+.step-d{font-size:14px;color:var(--ink3);line-height:1.7}
+
+.ai-sec{padding:80px 80px 100px;background:#fff;overflow:hidden}
+.ai-hdr{max-width:var(--W);margin:0 auto;margin-bottom:48px;text-align:center}
+.ai-hdr .lede{margin:12px auto 0;text-align:center}
+.orbit-container{position:relative;width:100%;max-width:860px;margin:0 auto;height:560px}
+#orbit-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
+.orbit-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10}
+.oc-ring{position:absolute;inset:-20px;border-radius:50%;border:1px solid rgba(74,170,120,.18);animation:ring-pulse 3s ease-in-out infinite}
+.oc-ring:nth-child(2){inset:-42px;animation-delay:.6s;border-color:rgba(74,170,120,.1)}
+.oc-ring:nth-child(3){inset:-64px;animation-delay:1.2s;border-color:rgba(74,170,120,.06)}
+@keyframes ring-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.04);opacity:.7}}
+.oc-body{width:110px;height:110px;border-radius:50%;background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 1px rgba(74,170,120,.35),0 0 32px rgba(74,170,120,.25),0 24px 60px rgba(0,0,0,.4);position:relative;z-index:2;cursor:default}
+.oc-logo{font-family:'Inter',sans-serif;font-size:15px;font-weight:600;color:#fff;line-height:1}
+.oc-logo em{font-style:italic;color:var(--gb)}
+.oc-label{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:4px}
+.factor-node{position:absolute;transform:translate(-50%,-50%);z-index:10;cursor:pointer}
+.fn-body{width:82px;height:82px;border-radius:50%;background:#fff;border:1.5px solid var(--bdm);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;overflow:hidden;padding:8px;transition:all .35s cubic-bezier(.16,1,.3,1);box-shadow:0 4px 20px rgba(0,0,0,.06)}
+.factor-node:hover .fn-body,.factor-node.active .fn-body{border-color:var(--gb);box-shadow:0 0 0 4px rgba(74,170,120,.15),0 0 20px rgba(74,170,120,.25),0 8px 24px rgba(0,0,0,.1);transform:scale(1.08)}
+.fn-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fn-icon svg{width:16px;height:16px;stroke:var(--ink3);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s}
+.factor-node.active .fn-icon svg{stroke:var(--gm)}
+.fn-label{font-size:7px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--ink4);text-align:center;line-height:1.2;width:64px;word-break:break-word;hyphens:auto;transition:color .2s}
+.factor-node.active .fn-label{color:var(--gm)}
+.orbit-line{stroke:rgba(74,170,120,.18);stroke-width:1;fill:none;stroke-dasharray:4 4}
+.orbit-line.active{stroke:rgba(74,170,120,.6);stroke-width:1.5;stroke-dasharray:none}
+.data-particle{fill:var(--gb);r:3;opacity:0}
+.ai-detail-wrap{max-width:var(--W);margin:28px auto 0;background:var(--surf2);border:1px solid var(--bd);border-radius:20px;overflow:hidden;min-height:240px;transition:opacity .35s ease}
+.adw-header{background:#fff;border-bottom:1px solid var(--bd);padding:20px 28px;display:flex;align-items:center;gap:16px}
+.adw-icon{width:44px;height:44px;border-radius:12px;background:var(--gl);display:flex;align-items:center;justify-content:center}
+.adw-icon svg{width:22px;height:22px;stroke:var(--gm);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.adw-meta{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink4);margin-bottom:3px}
+.adw-title{font-size:17px;font-weight:500;color:var(--ink)}
+.adw-body{padding:22px 28px;display:grid;grid-template-columns:1.1fr 1fr;gap:24px}
+.adw-col-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--ink3);margin-bottom:12px}
+.adw-desc{font-size:14px;color:var(--ink3);line-height:1.7}
+.adw-scenarios{display:flex;flex-direction:column;gap:8px}
+.adw-sc{background:#fff;border:1px solid var(--bd);border-radius:9px;padding:9px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.adw-sc-label{font-size:12px;color:var(--ink2);flex:1;min-width:0}
+.adw-sc-tag{font-size:10px;font-weight:600;padding:2px 9px;border-radius:100px;white-space:nowrap;flex-shrink:0}
+.adw-sc-tag.yes{background:var(--gl);color:var(--g);border:1px solid rgba(74,170,120,.25)}
+.adw-sc-tag.no{background:var(--rl);color:var(--re);border:1px solid rgba(191,41,41,.2)}
+.adw-sc-tag.maybe{background:#fff8e1;color:#7a5800;border:1px solid rgba(251,191,36,.25)}
+.adw-insight{background:#fff;border-left:3px solid var(--gb);border-radius:0 10px 10px 0;padding:14px 16px;font-size:13px;color:var(--ink3);line-height:1.7;filter:drop-shadow(0 0 6px rgba(74,170,120,.2))}
+.adw-formula{background:var(--dark);border-radius:10px;padding:14px 16px;font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,.72);line-height:1.8}
+.adw-formula span.hi{color:var(--gb)}.adw-formula span.lo{color:#f87171}
+
+.signal-sec{padding:160px 80px;background:var(--dark);position:relative;overflow:hidden}
+.signal-noise{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(255,255,255,.025) 1px,transparent 1px);background-size:24px 24px}
+.signal-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 50% at 50% 60%,rgba(74,170,120,.07) 0%,transparent 65%)}
+.signal-inner{position:relative;z-index:1;max-width:var(--W);margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:100px;align-items:center}
+.signal-right{display:flex;flex-direction:column;gap:24px}
+.signal-stat{display:flex;align-items:flex-start;gap:20px;padding:24px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;transition:all .35s cubic-bezier(.4,0,.2,1)}
+.signal-stat:hover{background:rgba(255,255,255,.07);border-color:rgba(74,170,120,.25);transform:translateX(4px)}
+.ss-line{width:3px;background:var(--gb);border-radius:2px;align-self:stretch;flex-shrink:0;box-shadow:0 0 8px rgba(74,170,120,.6),0 0 20px rgba(74,170,120,.25)}
+.ss-n{font-family:'Inter',sans-serif;font-size:32px;font-weight:600;color:#fff;letter-spacing:-1px;line-height:1;margin-bottom:6px;font-variant-numeric:tabular-nums}
+.ss-n em{color:var(--gb);font-style:normal;text-shadow:0 0 14px rgba(74,170,120,.8),0 0 32px rgba(74,170,120,.35)}
+.ss-l{font-size:14px;color:rgba(255,255,255,.68);line-height:1.65}
+.signal-canvas{display:block}
+
+.flow-sec{padding:140px 80px;background:var(--dark);position:relative;overflow:hidden}
+.flow-sec-bg{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 50% 55% at 50% 50%,rgba(74,170,120,.05) 0%,transparent 70%)}
+.flow-inner{max-width:var(--W);margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:100px;align-items:center;position:relative;z-index:1}
+#flow-canvas{display:block}
+.flow-steps{display:flex;flex-direction:column;gap:0;margin-top:36px}
+.flow-step{display:flex;gap:20px;padding:22px 0;border-bottom:1px solid rgba(255,255,255,.07);position:relative;cursor:default;transition:all .2s}
+.flow-step:last-child{border-bottom:none}
+.flow-step.lit .fst-num{color:var(--gb)}
+.flow-step.lit .fst-title{color:#fff}
+.fst-num{font-family:'Inter',sans-serif;font-size:11px;font-weight:500;color:rgba(255,255,255,.2);letter-spacing:.08em;flex-shrink:0;width:22px;margin-top:2px;transition:color .5s cubic-bezier(.4,0,.2,1)}
+.fst-title{font-size:15px;font-weight:500;color:rgba(255,255,255,.45);margin-bottom:4px;transition:color .5s cubic-bezier(.4,0,.2,1)}
+.fst-desc{font-size:13px;color:rgba(255,255,255,.42);line-height:1.65;transition:color .5s cubic-bezier(.4,0,.2,1)}
+.flow-step.lit .fst-desc{color:rgba(255,255,255,.72)}
+.fst-bar{height:2px;background:rgba(255,255,255,.08);border-radius:1px;margin-top:10px;overflow:hidden}
+.fst-bar-fill{height:100%;background:var(--gb);border-radius:1px;width:0;transition:width 0s linear}
+.flow-step.lit .fst-bar-fill{width:100%}
+
+.feat-sec{padding:120px 80px;background:var(--surf2)}
+.feat-hdr{max-width:var(--W);margin:0 auto;margin-bottom:56px}
+.feat-grid{max-width:var(--W);margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fc{background:#fff;border:1px solid var(--bd);border-radius:20px;padding:36px 34px;transition:border-color .2s}
+.fc:hover{border-color:var(--bdm);box-shadow:0 8px 28px rgba(0,0,0,.04);transform:translateY(-2px)}
+.fc{transition:border-color .25s ease,box-shadow .4s cubic-bezier(.4,0,.2,1),transform .4s cubic-bezier(.4,0,.2,1)}
+.fc.dark{background:var(--dark);border-color:var(--dark)}
+.fc.wide{grid-column:span 2}
+.fc-tag{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--gb);background:rgba(74,170,120,.1);padding:3px 10px;border-radius:100px;display:inline-block;margin-bottom:18px}
+.fc-t{font-family:'Inter',sans-serif;font-size:24px;font-weight:600;margin-bottom:10px;color:var(--ink)}
+.fc.dark .fc-t{color:#fff}
+.fc-d{font-size:14px;color:var(--ink3);line-height:1.75;max-width:400px}
+.fc.dark .fc-d{color:rgba(255,255,255,.46)}
+.fc-nums{display:flex;gap:36px;margin-top:28px}
+.fc-num-n{font-family:'Inter',sans-serif;font-size:30px;font-weight:600;letter-spacing:-1px;color:var(--ink);line-height:1}
+.fc.dark .fc-num-n{color:var(--gb)}
+.fc-num-l{font-size:12px;color:var(--ink4);margin-top:5px}
+.fc.dark .fc-num-l{color:rgba(255,255,255,.28)}
+.fc-list{list-style:none;margin-top:22px;display:flex;flex-direction:column;gap:9px}
+.fc-list li{display:flex;gap:9px;font-size:13px;color:var(--ink2)}
+.fc-list li::before{content:'✓';color:var(--gb);font-weight:600;flex-shrink:0}
+.fc.dark .fc-list li{color:rgba(255,255,255,.6)}
+.fc-wide-inner{display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:28px}
+.fwi-step{display:flex;gap:16px}
+.fwi-n{font-family:'Inter',sans-serif;font-size:28px;font-weight:500;color:var(--ink4);flex-shrink:0;line-height:1;letter-spacing:-1px}
+.fwi-t{font-size:14px;font-weight:500;margin-bottom:4px}
+.fwi-d{font-size:13px;color:var(--ink3);line-height:1.65}
+
+.lv-sec{background:var(--dark);padding:120px 80px}
+.lv-hdr{max-width:var(--W);margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:end;margin-bottom:56px}
+.lv-hdr p{font-size:15px;color:rgba(255,255,255,.62);line-height:1.8;max-width:360px}
+.lv-grid{max-width:var(--W);margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.lv-c{border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:28px 24px;transition:all .4s cubic-bezier(.16,1,.3,1);cursor:pointer;user-select:none}
+.lv-c:hover{border-color:rgba(74,170,120,.4);transform:translateY(-4px);box-shadow:0 8px 28px rgba(0,0,0,.15)}
+.lv-c.hot{background:var(--g);border-color:var(--gm)}
+.lv-c.selected{background:rgba(74,170,120,.12);border-color:var(--gb);transform:translateY(-4px)}
+.lv-n{font-family:'Inter',sans-serif;font-size:32px;font-weight:600;letter-spacing:-1px;color:rgba(255,255,255,.45);line-height:1;margin-bottom:16px}
+.lv-c.hot .lv-n{color:rgba(255,255,255,.5)}
+.lv-c.selected .lv-n{color:rgba(74,170,120,.7)}
+.lv-c.hot .lv-n,.lv-c.selected .lv-n{text-shadow:0 0 18px rgba(74,170,120,.7),0 0 40px rgba(74,170,120,.3)}
+.lv-name{font-size:16px;font-weight:500;color:#fff;margin-bottom:9px}
+.lv-c.selected .lv-name{color:#fff}
+.lv-desc{font-size:13px;color:rgba(255,255,255,.58);line-height:1.65}
+.lv-c.hot .lv-desc{color:rgba(255,255,255,.75)}
+.lv-c.selected .lv-desc{color:rgba(255,255,255,.7)}
+.lv-badge{display:inline-block;margin-top:16px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;background:rgba(74,170,120,.16);color:var(--gb);padding:3px 10px;border-radius:100px;box-shadow:0 0 10px rgba(74,170,120,.35)}
+
+.dash-sec{padding:120px 80px;background:var(--surf2)}
+.dash-hdr{max-width:var(--W);margin:0 auto;margin-bottom:56px}
+.dash-ui{max-width:var(--W);margin:0 auto;background:#fff;border:1px solid var(--bdm);border-radius:22px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.07)}
+.dui-bar{background:var(--surf2);border-bottom:1px solid var(--bd);height:50px;display:flex;align-items:center;padding:0 24px}
+.dui-logo{font-family:'Inter',sans-serif;font-size:16px;font-weight:600;color:var(--ink);margin-right:32px}
+.dui-logo em{font-style:italic;color:var(--gb)}
+.dui-tabs{display:flex;height:100%}
+.dui-tab{font-size:13px;color:var(--ink4);padding:0 18px;display:flex;align-items:center;border-bottom:2px solid transparent;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1)}
+.dui-tab:hover{color:var(--ink2)}
+.dui-tab.on{color:var(--ink);border-bottom-color:var(--ink)}
+.dui-panel{animation:panel-in .4s cubic-bezier(.16,1,.3,1) both}
+@keyframes panel-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.dui-store{margin-left:auto;font-size:11px;color:var(--ink4);background:#fff;border:1px solid var(--bd);border-radius:6px;padding:3px 10px;font-family:'Inter',sans-serif}
+.dui-body{padding:24px}
+.dui-mets{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.dm{background:var(--surf2);border-radius:11px;padding:16px 18px}
+.dm-l{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink4);margin-bottom:6px}
+.dm-v{font-family:'Inter',sans-serif;font-size:24px;font-weight:600;letter-spacing:-1px;color:var(--ink);line-height:1;font-variant-numeric:tabular-nums}
+.dm-v.gr{color:var(--gm)}.dm-v.am{color:var(--am)}
+.dm-s{font-size:11px;color:var(--ink4);margin-top:3px}
+.dui-2col{display:grid;grid-template-columns:3fr 2fr;gap:14px}
+.dui-tbl-wrap{border:1px solid var(--bd);border-radius:11px;overflow:hidden}
+.dui-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.dui-tbl th{background:var(--surf2);padding:8px 13px;text-align:left;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);border-bottom:1px solid var(--bd)}
+.dui-tbl td{padding:10px 13px;border-bottom:1px solid var(--bd);color:var(--ink2)}
+.dui-tbl tr:last-child td{border-bottom:none}
+.dui-tbl tbody tr{transition:background .25s cubic-bezier(.4,0,.2,1)}
+.dui-tbl tbody tr:hover{background:var(--surf2)}
+.db{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:100px}
+.db.auto{background:var(--gl);color:var(--g)}.db.wait{background:var(--al);color:var(--am)}.db.ai{background:#ede9fe;color:#5b21b6}
+.dg{color:var(--gm);font-weight:500;font-family:'Inter',sans-serif}
+.dui-side{display:flex;flex-direction:column;gap:10px}
+.dui-sc{background:var(--surf2);border-radius:11px;padding:16px 18px}
+.dui-sc-t{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:12px}
+.dbar-r{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:11px;color:var(--ink3)}
+.dbar-r:last-child{margin-bottom:0}
+.dbar-l{width:80px;flex-shrink:0}
+.dbar-bg{flex:1;height:4px;background:var(--surf3);border-radius:2px;overflow:hidden}
+.dbar-f{height:100%;border-radius:2px;background:var(--gb)}
+.dbar-p{width:26px;text-align:right}
+
+.testi-sec{background:var(--surf2);padding:120px 80px}
+.testi-hdr{max-width:var(--W);margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:56px}
+.testi-grid{max-width:var(--W);margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.tc{background:#fff;border-radius:20px;border:1px solid var(--bd);padding:32px;display:flex;flex-direction:column;gap:20px;transition:border-color .2s,box-shadow .2s}
+.tc:hover{border-color:var(--bdm);box-shadow:0 12px 40px rgba(0,0,0,.07);transform:translateY(-3px)}
+.tc{transition:border-color .25s ease,box-shadow .4s cubic-bezier(.16,1,.3,1),transform .4s cubic-bezier(.16,1,.3,1)}
+.tc-stars{color:#f59e0b;font-size:16px;letter-spacing:3px}
+.tc-saved{background:var(--gl);color:var(--g);font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;white-space:nowrap;font-family:'Inter',sans-serif}
+.tc-quote{font-size:15px;font-weight:300;font-style:italic;line-height:1.75;color:var(--ink2);flex:1}
+.tc-foot{display:flex;align-items:center;gap:12px;padding-top:16px;border-top:1px solid var(--bd)}
+.tc-av{width:36px;height:36px;border-radius:50%;background:var(--surf2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--ink3)}
+.tc-name{font-size:13px;font-weight:500}
+.tc-role{font-size:11px;color:var(--ink4)}
+
+.price-sec{padding:120px 80px;background:#fff}
+.price-hdr{max-width:var(--W);margin:0 auto;text-align:center;margin-bottom:56px}
+.price-hdr .lede{margin:12px auto 0;text-align:center}
+.price-grid{max-width:960px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.pc{background:var(--surf2);border:1px solid var(--bd);border-radius:20px;padding:34px 30px;position:relative;transition:transform .4s cubic-bezier(.16,1,.3,1),box-shadow .4s cubic-bezier(.16,1,.3,1)}
+.pc:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.08)}
+.pc.hot{background:#fff;border:2px solid var(--ink)}
+.pc-pop{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 13px;border-radius:100px;white-space:nowrap}
+.pc-plan{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--ink3);margin-bottom:12px}
+.pc-price{font-family:'Inter',sans-serif;font-size:48px;font-weight:600;letter-spacing:-2px;color:var(--ink);line-height:1;margin-bottom:4px;font-variant-numeric:tabular-nums}
+.pc-price sup{font-size:22px;vertical-align:super;letter-spacing:0}
+.pc-period{font-size:12px;color:var(--ink4);margin-bottom:24px}
+.pc-div{height:1px;background:var(--bd);margin-bottom:20px}
+.pc-feats{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:28px}
+.pc-feat{display:flex;gap:9px;font-size:13px;color:var(--ink2);line-height:1.4}
+.pc-feat::before{content:'✓';color:var(--gb);font-weight:600;flex-shrink:0}
+.pc-btn{width:100%;padding:13px;border-radius:10px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:all .25s cubic-bezier(.4,0,.2,1);border:1px solid var(--bds);background:transparent;color:var(--ink)}
+.pc.hot .pc-btn{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pc-btn:hover{opacity:.82;transform:translateY(-1px)}
+.pc-btn:active{transform:translateY(0) scale(.97);transition-duration:.08s}
+.pc-note{font-size:11px;color:var(--ink4);text-align:center;margin-top:8px}
+
+.faq-sec{padding:120px 80px;background:var(--surf2)}
+.faq-layout{max-width:var(--W);margin:0 auto;display:grid;grid-template-columns:2fr 3fr;gap:80px;align-items:start}
+.faq-email{display:inline-block;margin-top:20px;font-size:13px;color:var(--gb);text-decoration:none}
+.faq-list{display:flex;flex-direction:column}
+.faq-item{border-bottom:1px solid var(--bd)}
+.faq-q{width:100%;text-align:left;background:none;border:none;padding:18px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:500;color:var(--ink);font-family:'Inter',sans-serif;gap:16px;transition:color .15s}
+.faq-q:hover{color:var(--ink3)}
+.faq-arr{font-size:16px;color:var(--ink4);transition:transform .35s cubic-bezier(.16,1,.3,1);flex-shrink:0}
+.faq-item.open .faq-arr{transform:rotate(45deg)}
+.faq-a{font-size:14px;color:var(--ink2);line-height:1.75;max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1),padding .4s cubic-bezier(.4,0,.2,1),opacity .3s ease;padding-bottom:0;opacity:0}
+.faq-item.open .faq-a{max-height:260px;padding-bottom:18px;opacity:1}
+
+.cta-sec{background:var(--dark);padding:140px 80px;text-align:center;position:relative;overflow:hidden}
+.cta-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 55% 70% at 50% 50%,rgba(74,170,120,.10) 0%,transparent 65%)}
+.cta-inner{position:relative;z-index:1;max-width:600px;margin:0 auto}
+.cta-sec h2{color:#fff;margin-bottom:14px}
+.cta-sec p{font-size:16px;font-weight:300;color:rgba(255,255,255,.60);margin-bottom:44px;line-height:1.8}
+.cta-form{display:flex;gap:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:13px;padding:7px 7px 7px 18px;max-width:460px;margin:0 auto 14px}
+.cta-inp{flex:1;background:transparent;border:none;outline:none;font-size:14px;color:#fff;font-family:'Inter',sans-serif}
+.cta-inp::placeholder{color:rgba(255,255,255,.28)}
+.cta-go{background:var(--gb);color:#fff;border:none;border-radius:8px;padding:10px 22px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;white-space:nowrap;transition:all .3s cubic-bezier(.4,0,.2,1)}
+.cta-go:hover{opacity:.88;transform:translateY(-1px)}
+.cta-go:active{transform:translateY(0) scale(.96);transition-duration:.08s}
+.cta-note{font-size:12px;color:rgba(255,255,255,.24)}
+.cta-trust{display:flex;justify-content:center;gap:44px;margin-top:52px;padding-top:44px;border-top:1px solid rgba(255,255,255,.08)}
+.ct-n{font-family:'Inter',sans-serif;font-size:22px;font-weight:600;color:#fff;letter-spacing:-1px;display:block;line-height:1}
+.ct-n em{color:var(--gb);font-style:normal;text-shadow:0 0 14px rgba(74,170,120,.8),0 0 32px rgba(74,170,120,.35)}
+.ct-l{font-size:11px;color:rgba(255,255,255,.3);margin-top:5px;display:block}
+
+footer{background:#fff;padding:52px 80px;border-top:1px solid var(--bd)}
+.ft-top{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:36px;border-bottom:1px solid var(--bd);margin-bottom:28px}
+.ft-logo{font-family:'Inter',sans-serif;font-size:20px;font-weight:600;color:var(--ink)}
+.ft-logo em{font-style:italic;color:var(--gb)}
+.ft-tag{font-size:12px;color:var(--ink4);margin-top:8px;max-width:200px;line-height:1.55}
+.ft-cols{display:flex;gap:60px}
+.ft-ct{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--ink4);margin-bottom:14px}
+.ft-links{list-style:none;display:flex;flex-direction:column;gap:9px}
+.ft-links a{font-size:13px;color:var(--ink3);text-decoration:none;transition:color .25s cubic-bezier(.4,0,.2,1)}
+.ft-links a:hover{color:var(--ink)}
+.ft-bot{display:flex;justify-content:space-between;align-items:center}
+.ft-copy{font-size:12px;color:var(--ink4)}
+.ft-legal{display:flex;gap:20px}
+.ft-legal a{font-size:12px;color:var(--ink4);text-decoration:none}
+
+@keyframes fu{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+@media(max-width:1024px){
+  :root{--W:100%}nav{padding:0 32px}.nav-mid{display:none}.hero{padding:0 32px;height:auto;min-height:100svh}.stats-sec{padding:56px 32px}.prob-sec{padding:80px 32px}.prob-layout{grid-template-columns:1fr;gap:40px}.prob-aside{position:static}.how-sec{padding:80px 32px}.how-hdr{flex-direction:column;gap:20px;align-items:flex-start}.steps-row{grid-template-columns:1fr;gap:1px}.ai-sec{padding:80px 32px 80px}.orbit-container{height:520px}.adw-body{grid-template-columns:1fr;gap:16px}.signal-sec{padding:100px 32px}.signal-inner{grid-template-columns:1fr;gap:48px}.flow-sec{padding:100px 32px}.flow-inner{grid-template-columns:1fr;gap:48px}#flow-canvas{height:380px !important}.feat-sec{padding:80px 32px}.feat-grid{grid-template-columns:1fr}.fc.wide{grid-column:span 1}.lv-sec{padding:80px 32px}.lv-hdr{grid-template-columns:1fr;gap:20px}.lv-grid{grid-template-columns:1fr 1fr}.dash-sec{padding:80px 32px}.dui-mets{grid-template-columns:1fr 1fr}.dui-2col{grid-template-columns:1fr}.testi-sec{padding:80px 32px}.testi-grid{grid-template-columns:1fr}.price-sec{padding:80px 32px}.price-grid{max-width:100%;grid-template-columns:1fr}.faq-sec{padding:80px 32px}.faq-layout{grid-template-columns:1fr;gap:40px}.cta-sec{padding:100px 32px}footer{padding:48px 32px}.ft-top{flex-direction:column;gap:36px}.ft-cols{gap:32px}
+}
+@media(max-width:640px){
+  nav{padding:0 20px;height:60px}.nav-logo{font-size:18px}.nav-login{display:none}.nav-cta{padding:8px 14px;font-size:12px}.btn-dark{padding:13px 20px;font-size:14px}.btn-out{padding:13px 18px;font-size:14px}.hero{padding:0 20px;min-height:100svh}.hero-h1{font-size:clamp(28px,7.5vw,42px);letter-spacing:-.3px}.hero-sub{font-size:15px;max-width:100%}.hero-btns{flex-direction:column;width:100%;max-width:320px}.hero-btns a{width:100%;justify-content:center}.hero-proof{gap:24px;flex-wrap:wrap;justify-content:flex-start;padding:20px 0 0;margin-top:24px}.hero-proof>div{min-width:calc(50% - 12px)}.hp-n{font-size:18px}.pill{font-size:10px;padding:4px 12px;margin-bottom:20px}h2.hl{font-size:clamp(28px,7.5vw,40px)}.stats-sec{padding:40px 20px}.stats-grid{grid-template-columns:1fr 1fr;border-radius:12px}.stat-cell{padding:24px 20px}.stat-n{font-size:26px}.stat-d{font-size:12px}.prob-sec{padding:60px 20px}.prob-card{padding:16px 18px;grid-template-columns:34px 1fr;gap:10px}.prob-aside{padding:28px 24px;border-radius:16px}.pa-big{font-size:48px}.how-sec{padding:60px 20px}.step-cell{padding:28px 24px}.step-n{font-size:48px;top:14px;right:14px}.ai-sec{padding:60px 20px 60px}.orbit-container{height:400px}.fn-body{width:64px;height:64px}.fn-label{font-size:6px}.fn-icon svg{width:14px;height:14px}.oc-body{width:82px;height:82px}.oc-logo{font-size:12px}.oc-label{font-size:7px}.signal-sec{padding:60px 20px}.signal-canvas{height:80px}.ss-n{font-size:26px}.signal-stat{padding:18px 16px;gap:14px}.flow-sec{padding:60px 20px}#flow-canvas{height:280px !important}.feat-sec{padding:60px 20px}.fc{padding:28px 24px}.fc-t{font-size:20px}.fc-wide-inner{grid-template-columns:1fr}.fc-num-n{font-size:24px}.lv-sec{padding:60px 20px}.lv-grid{grid-template-columns:1fr 1fr;gap:8px}.lv-c{padding:20px 18px}.lv-n{font-size:24px;margin-bottom:12px}.lv-name{font-size:14px}.lv-desc{font-size:12px}.dash-sec{padding:60px 20px}.dui-bar{padding:0 14px;overflow-x:auto}.dui-tabs{display:none}.dui-body{padding:14px}.dui-mets{grid-template-columns:1fr 1fr;gap:8px}.dm{padding:12px 14px}.dm-v{font-size:18px}.testi-sec{padding:60px 20px}.testi-hdr{flex-direction:column;gap:12px;align-items:flex-start;margin-bottom:36px}.testi-grid{grid-template-columns:1fr !important}.tc{padding:24px 20px;border-radius:14px}.tc-quote{font-size:14px}.price-sec{padding:60px 20px}.price-grid{gap:10px}.pc{padding:26px 22px}.pc-price{font-size:40px}.faq-sec{padding:60px 20px}.faq-q{font-size:14px;padding:14px 0}.faq-a{font-size:13px}h2.hl[style*="38px"]{font-size:28px !important}.cta-sec{padding:60px 20px}.cta-form{flex-direction:column;padding:12px;gap:8px;border-radius:12px}.cta-inp{padding:4px 0}.cta-go{border-radius:8px;padding:12px;text-align:center}.cta-trust{flex-wrap:wrap;gap:20px}.cta-trust>div{min-width:calc(50% - 22px)}footer{padding:40px 20px}.ft-cols{flex-direction:column;gap:24px}.ft-bot{flex-direction:column;gap:10px;align-items:flex-start}
+}
+.nav-burger{display:none;flex-direction:column;justify-content:space-between;width:22px;height:16px;background:none;border:none;cursor:pointer;padding:0;margin-left:8px}
+.nav-burger span{display:block;height:1.5px;background:var(--ink);border-radius:2px;transition:all .2s}
+@media(max-width:1024px){.nav-burger{display:flex}}
+.mobile-menu{display:none;position:fixed;inset:0;top:60px;background:#fff;z-index:299;flex-direction:column;padding:32px 24px;gap:0;border-top:1px solid var(--bd);animation:fu .35s cubic-bezier(.16,1,.3,1)}
+.mobile-menu.open{display:flex}
+.mobile-menu a{font-size:18px;font-weight:400;color:var(--ink);text-decoration:none;padding:16px 0;border-bottom:1px solid var(--bd);transition:color .15s}
+.mobile-menu a:hover{color:var(--gb)}
+.mobile-menu .mm-cta{margin-top:24px;background:var(--ink);color:#fff;border-radius:12px;padding:16px;text-align:center;border:none;font-weight:500}
+
+/* ══ MODALS ══ */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.45);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity .35s cubic-bezier(.4,0,.2,1)}
+.modal-overlay.open{display:flex;opacity:1}
+.modal-box{background:#fff;border-radius:20px;max-width:640px;width:100%;max-height:85vh;overflow-y:auto;position:relative;padding:48px 44px;box-shadow:0 32px 80px rgba(0,0,0,.18);animation:modal-in .45s cubic-bezier(.16,1,.3,1) both}
+@keyframes modal-in{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}
+.modal-close{position:absolute;top:18px;right:18px;width:36px;height:36px;border-radius:50%;border:1px solid var(--bd);background:#fff;font-size:20px;color:var(--ink3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s cubic-bezier(.4,0,.2,1)}
+.modal-close:hover{background:var(--surf2);color:var(--ink);transform:rotate(90deg)}
+.modal-content h2{font-size:24px;font-weight:600;margin-bottom:8px;color:var(--ink)}
+.modal-content .modal-sub{font-size:13px;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;font-weight:500;margin-bottom:20px}
+.modal-content p{font-size:14px;color:var(--ink2);line-height:1.8;margin-bottom:16px}
+.modal-content h3{font-size:16px;font-weight:600;margin:24px 0 10px;color:var(--ink)}
+.modal-content ul{margin:0 0 16px 20px;font-size:14px;color:var(--ink2);line-height:1.8}
+.modal-form{display:flex;flex-direction:column;gap:12px;margin-top:20px}
+.modal-form input,.modal-form textarea{border:1px solid var(--bdm);border-radius:10px;padding:12px 16px;font-size:14px;font-family:'Inter',sans-serif;color:var(--ink);outline:none;transition:all .25s cubic-bezier(.4,0,.2,1);background:var(--surf2)}
+.modal-form input:focus,.modal-form textarea:focus{border-color:var(--gb);background:#fff;box-shadow:0 0 0 3px rgba(74,170,120,.1)}
+.modal-form textarea{resize:vertical;min-height:100px}
+.modal-form button{background:var(--ink);color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1)}
+.modal-form button:hover{opacity:.88;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.modal-form button:active{transform:translateY(0) scale(.97);transition-duration:.08s}
+.modal-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){.modal-box{padding:32px 24px;border-radius:16px}.modal-form .form-row{grid-template-columns:1fr}}
+
+html{scroll-behavior:smooth}
+a,button{transition:all .2s ease}
+.rv{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+.rv.in{opacity:1;transform:none}
+.rv.d1{transition-delay:.15s}.rv.d2{transition-delay:.3s}
+nav{transition:background .3s,box-shadow .3s}
+</style>
+</head>
+<body>
+<nav>
+  <a href="#" class="nav-logo">Refund<em>OS</em></a>
+  <ul class="nav-mid"><li><a href="#how">How it works</a></li><li><a href="#features">Features</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#testimonials">Stories</a></li><li><a href="#faq">FAQ</a></li></ul>
+  <div class="nav-right"><a href="login.html" class="nav-login">Log in</a><a href="login.html" class="nav-cta">Start free trial →</a><button class="nav-burger" id="nav-burger" aria-label="Menu"><span></span><span></span><span></span></button></div>
+</nav>
+<div class="mobile-menu" id="mobile-menu"><a href="#how" onclick="closeMobileMenu()">How it works</a><a href="#features" onclick="closeMobileMenu()">Features</a><a href="#pricing" onclick="closeMobileMenu()">Pricing</a><a href="#testimonials" onclick="closeMobileMenu()">Stories</a><a href="#faq" onclick="closeMobileMenu()">FAQ</a><a href="login.html" class="mm-cta" onclick="closeMobileMenu()">Start free trial →</a></div>
+
+<section class="hero">
+  <div class="hero-grid"></div><div class="hero-glow"></div>
+  <div class="hero-inner">
+    <div class="hero-pill"><div class="sonar-wrap"><div class="sonar-ring"></div><div class="sonar-ring"></div><div class="sonar-ring"></div><div class="sonar-dot"></div></div>AI-powered ops for Shopify</div>
+    <h1 class="hero-h1">Your store runs itself.<br>Refunds. Inventory. <span class="tw-wrap"><span class="tw-word" id="tw-word">All of it.</span></span></h1>
+    <p class="hero-sub">RefundOS is the AI operations layer for Shopify. It decides refunds, predicts stockouts, and reorders inventory — so you stop firefighting and start scaling.</p>
+    <div class="hero-btns"><a href="login.html" class="btn-dark">Get started free →</a><a href="#how" class="btn-out">See how it works</a></div>
+    <p class="hero-note">14-day free trial &nbsp;·&nbsp; No credit card &nbsp;·&nbsp; Connects in 60 seconds</p>
+    <div class="hero-proof"><div><div class="hp-n"><span class="countup" data-target="420" data-prefix="$">0</span><em>/mo</em></div><div class="hp-l">avg. savings per store</div></div><div><div class="hp-n"><span class="countup" data-target="87">0</span><em>%</em></div><div class="hp-l">decisions automated</div></div><div><div class="hp-n"><span class="countup" data-target="10">0</span><em> sec</em></div><div class="hp-l">avg. AI decision time</div></div><div><div class="hp-n"><span class="countup" data-target="340" data-format="comma">0</span><em>+</em></div><div class="hp-l">stores connected</div></div></div>
+  </div>
+</section>
+
+<section class="stats-sec"><div class="stats-grid rv"><div class="stat-cell"><div class="stat-n"><span class="countup" data-target="420" data-prefix="$">0</span><em>/mo</em></div><div class="stat-d">Average monthly savings per Shopify store</div></div><div class="stat-cell"><div class="stat-n"><span class="countup" data-target="87">0</span><em>%</em></div><div class="stat-d">Refund and reorder decisions fully automated</div></div><div class="stat-cell"><div class="stat-n"><span class="countup" data-target="10">0</span><em> sec</em></div><div class="stat-d">Average AI decision time per request</div></div><div class="stat-cell"><div class="stat-n"><span class="countup" data-target="47" data-decimals="0">0</span><em>%</em></div><div class="stat-d">Reduction in stockout events after 30 days</div></div></div></section>
+
+<section class="prob-sec" id="problem">
+  <div class="prob-hdr"><div class="pill">The problem</div><h2 class="hl">You're running ops<br>like it's still 2019</h2></div>
+  <div class="prob-layout">
+    <div class="prob-list rv">
+      <div class="prob-card"><div class="prob-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bf2929" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div><div class="prob-t">Refund decisions are manual, slow, and inconsistent</div><div class="prob-d">Every return request gets handled differently depending on who's on shift. Some approve everything, others create friction. Neither approach is optimal.</div></div></div>
+      <div class="prob-card"><div class="prob-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bf2929" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div><div><div class="prob-t">Rule-based systems can't adapt to real situations</div><div class="prob-d">Static rules don't account for customer LTV, product category, return history, or whether the item can even be resold. Context matters — rigid rules ignore it.</div></div></div>
+      <div class="prob-card"><div class="prob-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bf2929" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="prob-t">Inventory management is reactive, not predictive</div><div class="prob-d">You find out you're out of stock when a customer complains. By then you've already lost the sale, the review, and the reorder window.</div></div></div>
+      <div class="prob-card"><div class="prob-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#bf2929" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><div class="prob-t">Reorder decisions rely on gut feel and spreadsheets</div><div class="prob-d">You're guessing quantities, missing lead times, and reordering too late or too much. The data exists — nobody's using it.</div></div></div>
+    </div>
+    <div class="rv d1"><div class="prob-aside"><div class="pa-eye">What manual ops actually costs</div><div class="pa-big" id="pa-total">$13</div><div class="pa-sub">Average cost to process a single return — before you factor in lost sales from stockouts and late reorders</div><div class="pa-rows"><div class="pa-row"><span class="pa-k">Return shipping label</span><span class="pa-v bad" id="pa-v0">−$6.50</span></div><div class="pa-row"><span class="pa-k">Restocking + inspection</span><span class="pa-v bad" id="pa-v1">−$3.80</span></div><div class="pa-row"><span class="pa-k">Staff time (15 min)</span><span class="pa-v bad" id="pa-v2">−$2.50</span></div><div class="pa-row"><span class="pa-k">Missed reorder window</span><span class="pa-v bad" id="pa-v3">−$1.20</span></div><div class="pa-sep"></div><div class="pa-row"><span class="pa-k">With RefundOS instead</span><span class="pa-v good">Save $11+ per event</span></div></div></div></div>
+  </div>
+</section>
+
+<section class="how-sec" id="how">
+  <div class="how-hdr"><div><div class="pill">How it works</div><h2 class="hl">Connect once.<br>Automate everything.</h2></div><p class="lede">Link your Shopify store, set your preferences, and let the AI handle refunds and inventory decisions from day one.</p></div>
+  <div class="steps-row rv">
+    <div class="step-cell"><div class="step-n">01</div><div class="step-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--gm)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div><div class="step-t">Connect your Shopify store</div><div class="step-d">One-click OAuth. RefundOS syncs your orders, products, customers, and inventory levels. No developer needed.</div></div>
+    <div class="step-cell"><div class="step-n">02</div><div class="step-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--gm)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41"/><path d="M20 12h2"/><path d="M19.07 19.07l-1.41-1.41"/><path d="M12 20v2"/><path d="M4.93 19.07l1.41-1.41"/><path d="M2 12h2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M12 2v2"/></svg></div><div class="step-t">Configure your rules</div><div class="step-d">Set refund thresholds, safety stock levels, and reorder triggers. Choose from four modes — from "show me every recommendation" to "handle everything automatically." Configure dollar thresholds to match your comfort level.</div></div>
+    <div class="step-cell"><div class="step-n">03</div><div class="step-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--gm)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div><div class="step-t">AI takes the wheel</div><div class="step-d">Refunds resolve in minutes. Stockouts get predicted days ahead. Reorders fire automatically. Your dashboard shows every decision and dollar saved.</div></div>
+  </div>
+</section>
+
+<section class="ai-sec" id="ai-engine">
+  <div class="ai-hdr rv"><div class="pill">AI decision engine</div><h2 class="hl">Two engines. One brain.<br><em>Refunds + Inventory, automated.</em></h2><p class="lede">RefundOS analyzes six signals for every refund decision, and tracks real-time inventory velocity to predict what needs reordering. Click any node to explore.</p></div>
+  <div class="orbit-container rv">
+    <svg id="orbit-svg" viewBox="0 0 900 700" xmlns="http://www.w3.org/2000/svg"><defs><filter id="particle-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="450" cy="350" r="180" fill="none" stroke="rgba(74,170,120,.06)" stroke-width="1" stroke-dasharray="4 6"/><circle cx="450" cy="350" r="240" fill="none" stroke="rgba(74,170,120,.04)" stroke-width="1"/><g id="orbit-lines"></g><g id="orbit-particles" filter="url(#particle-glow)"></g></svg>
+    <div class="orbit-center" id="orbit-center"><div class="oc-ring"></div><div class="oc-ring"></div><div class="oc-ring"></div><div class="oc-body"><div class="oc-logo">RefundOS</div><div class="oc-label">AI core</div></div></div>
+    <div class="factor-node active" id="fn-0" onclick="selectNode(0)"><div class="fn-body"><div class="fn-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="fn-label">Return cost</div></div></div>
+    <div class="factor-node" id="fn-1" onclick="selectNode(1)"><div class="fn-body"><div class="fn-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="fn-label">Customer LTV</div></div></div>
+    <div class="factor-node" id="fn-2" onclick="selectNode(2)"><div class="fn-body"><div class="fn-icon"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></div><div class="fn-label">Resale odds</div></div></div>
+    <div class="factor-node" id="fn-3" onclick="selectNode(3)"><div class="fn-body"><div class="fn-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="fn-label">Return reason</div></div></div>
+    <div class="factor-node" id="fn-4" onclick="selectNode(4)"><div class="fn-body"><div class="fn-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div class="fn-label">Refund history</div></div></div>
+    <div class="factor-node" id="fn-5" onclick="selectNode(5)"><div class="fn-body"><div class="fn-icon"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div class="fn-label">Product type</div></div></div>
+  </div>
+  <div class="ai-detail-wrap rv d1" id="ai-detail-wrap"><div class="adw-header" id="adw-header"></div><div class="adw-body" id="adw-body"></div></div>
+</section>
+
+<section class="signal-sec">
+  <div class="signal-noise"></div><div class="signal-glow"></div>
+  <div class="signal-inner">
+    <div class="signal-left rv"><div class="pill lt">The result</div><h2 class="hl wh" style="font-size:clamp(34px,3.4vw,54px)">Fewer stockouts.<br>Faster refunds.<br><em>Better margins.</em></h2><p style="font-size:15px;font-weight:300;color:rgba(255,255,255,.65);line-height:1.8;max-width:380px;margin-top:20px">RefundOS replaces the guesswork in your operations. Every refund decision is context-aware. Every reorder is data-driven. Every alert arrives early enough to act on.</p><a href="#cta" class="btn-dark" style="background:var(--gb);margin-top:8px">Start saving today →</a></div>
+    <div class="signal-right rv d1">
+      <div class="signal-stat"><div class="ss-line"></div><div><div class="ss-n">$11.20<em> avg</em></div><div class="ss-l">Saved per automated ops decision</div></div></div>
+      <div class="signal-stat"><div class="ss-line"></div><div><div class="ss-n">10<em> sec</em></div><div class="ss-l">Avg. AI decision time</div></div></div>
+      <div class="signal-stat"><div class="ss-line"></div><div><div class="ss-n">94<em>%</em></div><div class="ss-l">Decision accuracy vs. expert ops manager</div></div></div>
+      <div class="signal-stat"><div class="ss-line"></div><div><div class="ss-n">↓68<em>%</em></div><div class="ss-l">Reduction in stockout events</div></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="feat-sec" id="features">
+  <div class="feat-hdr"><div class="pill">Features</div><h2 class="hl">Built for the ops problems<br>no one else solves</h2></div>
+  <div class="feat-grid">
+    <div class="fc rv"><div class="fc-tag">AI refund engine</div><div class="fc-t">Context-aware refund decisions</div><div class="fc-d">Not rule-based. The AI weighs customer LTV, item value, return history, resale odds, and reason — then decides.</div><div class="fc-nums"><div><div class="fc-num-n">4:12</div><div class="fc-num-l">avg. decision time</div></div><div><div class="fc-num-n">94%</div><div class="fc-num-l">accuracy vs expert</div></div></div></div>
+    <div class="fc dark rv d1"><div class="fc-tag">Inventory intelligence</div><div class="fc-t">Predict stockouts before they happen</div><div class="fc-d">Tracks 7-day, 14-day, and 30-day sales velocity. Alerts you before stock runs out — or auto-reorders for you.</div><ul class="fc-list"><li>Stock depletion prediction engine</li><li>Automated reorder recommendations</li><li>One-click reorder execution</li><li>Smart alerts for stock risk</li></ul></div>
+    <div class="fc wide rv d2"><div class="fc-tag">Shopify native</div><div class="fc-t">Deep Shopify integration</div><div class="fc-d">Full sync with orders, products, customers, and inventory. One-click connect, real-time data flow.</div><div class="fc-wide-inner"><div class="fwi-step"><div class="fwi-n">01</div><div><div class="fwi-t">Enter your store URL</div><div class="fwi-d">Paste yourstore.myshopify.com — we handle the OAuth flow.</div></div></div><div class="fwi-step"><div class="fwi-n">02</div><div><div class="fwi-t">Authorize access</div><div class="fwi-d">Orders, customers, products, and refund permissions.</div></div></div><div class="fwi-step"><div class="fwi-n">03</div><div><div class="fwi-t">First request analyzed</div><div class="fwi-d">The moment the next refund request comes in, we're on it.</div></div></div><div class="fwi-step"><div class="fwi-n">04</div><div><div class="fwi-t">Dashboard goes live</div><div class="fwi-d">All history, decisions, savings in one real-time view.</div></div></div></div></div>
+    <div class="fc rv"><div class="fc-tag">Analytics</div><div class="fc-t">See every decision and its impact</div><div class="fc-d">Track savings, refund patterns, stock health, and reorder performance in one dashboard.</div><ul class="fc-list"><li>Weekly savings and ops efficiency report</li><li>Refund reason and return rate trends</li><li>Per-SKU inventory health scores</li><li>Stock depletion forecast accuracy</li></ul></div>
+    <div class="fc rv d1"><div class="fc-tag">Ops dashboard</div><div class="fc-t">One screen for your entire operation</div><div class="fc-d">Refunds, inventory, alerts, and reorder history — unified in a single real-time command center.</div><div class="fc-nums"><div><div class="fc-num-n">↓68%</div><div class="fc-num-l">chargeback rate</div></div><div><div class="fc-num-n">4.8★</div><div class="fc-num-l">post-refund rating</div></div></div></div>
+  </div>
+</section>
+
+<section class="lv-sec" id="levels">
+  <div class="lv-hdr"><div><div class="pill lt">Automation levels</div><h2 class="hl wh">You choose the<br><em>level of automation</em></h2></div><p>Start with suggestions. Scale to full autopilot. Every action is logged and reversible.</p></div>
+  <div class="lv-grid rv">
+    <div class="lv-c" onclick="toggleLevel(this)"><div class="lv-n">01</div><div class="lv-name">Recommend only</div><div class="lv-desc">AI recommends. You decide. Every refund and reorder surfaced with full reasoning.</div></div>
+    <div class="lv-c hot" onclick="toggleLevel(this)"><div class="lv-n">02</div><div class="lv-name">Threshold auto</div><div class="lv-desc">Set dollar and stock thresholds. Below them, decisions execute automatically.</div><div class="lv-badge">Most popular</div></div>
+    <div class="lv-c" onclick="toggleLevel(this)"><div class="lv-n">03</div><div class="lv-name">Full autopilot</div><div class="lv-desc">AI handles everything. You get a daily digest. Override anytime.</div></div>
+    <div class="lv-c" onclick="toggleLevel(this)"><div class="lv-n">04</div><div class="lv-name">Smart routing</div><div class="lv-desc">VIP customers get instant refunds. New buyers get careful review. Risky SKUs get manual flags.</div></div>
+  </div>
+</section>
+
+<section class="dash-sec" id="dashboard">
+  <div class="dash-hdr"><div class="pill">Your dashboard</div><h2 class="hl">Everything in one place</h2><p class="lede" style="margin-top:10px">Decisions, savings, settings — one view, no tabs, no spreadsheets.</p></div>
+  <div class="dash-ui rv">
+    <div class="dui-bar"><div class="dui-logo">RefundOS</div><div class="dui-tabs"><div class="dui-tab on" onclick="switchDashTab(0,this)">Dashboard</div><div class="dui-tab" onclick="switchDashTab(1,this)">Refund history</div><div class="dui-tab" onclick="switchDashTab(2,this)">Analytics</div><div class="dui-tab" onclick="switchDashTab(3,this)">Settings</div></div><div class="dui-store">yourstore.myshopify.com</div></div>
+
+    <!-- TAB 0: Dashboard -->
+    <div class="dui-body dui-panel" id="dp-0">
+      <div class="dui-mets"><div class="dm"><div class="dm-l">This month saved</div><div class="dm-v gr"><span class="countup" data-target="420" data-prefix="$">0</span></div><div class="dm-s">vs. processing all returns</div></div><div class="dm"><div class="dm-l">Refunds handled</div><div class="dm-v">64</div><div class="dm-s">this month total</div></div><div class="dm"><div class="dm-l">Auto-processed</div><div class="dm-v">78%</div><div class="dm-s">Level 2 active</div></div><div class="dm"><div class="dm-l">Awaiting approval</div><div class="dm-v am">3</div><div class="dm-s">needs review</div></div></div>
+      <div class="dui-2col">
+        <div class="dui-tbl-wrap"><table class="dui-tbl"><thead><tr><th>Order</th><th>Product</th><th>Amount</th><th>AI decision</th><th>Status</th><th>Saved</th></tr></thead><tbody><tr><td>#4821</td><td>Candle set</td><td>$18.00</td><td><span class="db ai">No return</span></td><td><span class="db auto">Done</span></td><td class="dg">+$11.20</td></tr><tr><td>#4819</td><td>BT Speaker</td><td>$89.00</td><td><span class="db ai">Return</span></td><td><span class="db wait">Waiting</span></td><td>—</td></tr><tr><td>#4817</td><td>T-shirt 3pk</td><td>$42.00</td><td><span class="db ai">Partial</span></td><td><span class="db wait">Waiting</span></td><td>—</td></tr><tr><td>#4814</td><td>Face serum</td><td>$24.00</td><td><span class="db ai">No return</span></td><td><span class="db auto">Done</span></td><td class="dg">+$9.80</td></tr><tr><td>#4811</td><td>Cutting board</td><td>$31.00</td><td><span class="db ai">No return</span></td><td><span class="db auto">Done</span></td><td class="dg">+$13.50</td></tr></tbody></table></div>
+        <div class="dui-side"><div class="dui-sc"><div class="dui-sc-t">Refund reasons</div><div class="dbar-r"><span class="dbar-l">Didn't like it</span><div class="dbar-bg"><div class="dbar-f" style="width:45%"></div></div><span class="dbar-p">45%</span></div><div class="dbar-r"><span class="dbar-l">Damaged</span><div class="dbar-bg"><div class="dbar-f" style="width:28%"></div></div><span class="dbar-p">28%</span></div><div class="dbar-r"><span class="dbar-l">Wrong item</span><div class="dbar-bg"><div class="dbar-f" style="width:17%"></div></div><span class="dbar-p">17%</span></div><div class="dbar-r"><span class="dbar-l">Other</span><div class="dbar-bg"><div class="dbar-f" style="width:10%"></div></div><span class="dbar-p">10%</span></div></div><div class="dui-sc"><div class="dui-sc-t">This month</div><div style="font-size:12px;color:var(--ink3);line-height:2.1"><div>No-return refunds<span style="float:right;color:var(--ink);font-family:'Inter',sans-serif">38 (59%)</span></div><div>Return then refund<span style="float:right;color:var(--ink);font-family:'Inter',sans-serif">18 (28%)</span></div><div>Partial / exchange<span style="float:right;color:var(--ink);font-family:'Inter',sans-serif">8 (13%)</span></div><div style="border-top:1px solid var(--bd);margin-top:8px;padding-top:8px">Avg. resolution<span style="float:right;color:var(--ink);font-family:'Inter',sans-serif">4 min 12 sec</span></div></div></div></div>
+      </div>
+    </div>
+
+    <!-- TAB 1: Refund History -->
+    <div class="dui-body dui-panel" id="dp-1" style="display:none">
+      <div class="dui-tbl-wrap"><table class="dui-tbl"><thead><tr><th>Date</th><th>Order</th><th>Customer</th><th>Product</th><th>Amount</th><th>Decision</th><th>Saved</th></tr></thead><tbody>
+        <tr><td>Mar 18</td><td>#4821</td><td>Emily R.</td><td>Candle set</td><td>$18.00</td><td><span class="db ai">No return</span></td><td class="dg">+$11.20</td></tr>
+        <tr><td>Mar 17</td><td>#4819</td><td>James K.</td><td>BT Speaker</td><td>$89.00</td><td><span class="db ai">Return</span></td><td>—</td></tr>
+        <tr><td>Mar 17</td><td>#4817</td><td>Sofia M.</td><td>T-shirt 3pk</td><td>$42.00</td><td><span class="db ai">Partial</span></td><td class="dg">+$6.40</td></tr>
+        <tr><td>Mar 16</td><td>#4814</td><td>David L.</td><td>Face serum</td><td>$24.00</td><td><span class="db ai">No return</span></td><td class="dg">+$9.80</td></tr>
+        <tr><td>Mar 16</td><td>#4811</td><td>Anna P.</td><td>Cutting board</td><td>$31.00</td><td><span class="db ai">No return</span></td><td class="dg">+$13.50</td></tr>
+        <tr><td>Mar 15</td><td>#4808</td><td>Tom B.</td><td>Yoga mat</td><td>$38.00</td><td><span class="db ai">No return</span></td><td class="dg">+$12.10</td></tr>
+        <tr><td>Mar 14</td><td>#4805</td><td>Lisa W.</td><td>Mug set</td><td>$22.00</td><td><span class="db ai">No return</span></td><td class="dg">+$10.40</td></tr>
+        <tr><td>Mar 13</td><td>#4801</td><td>Mark H.</td><td>Headphones</td><td>$64.00</td><td><span class="db ai">Return</span></td><td>—</td></tr>
+      </tbody></table></div>
+    </div>
+
+    <!-- TAB 2: Analytics -->
+    <div class="dui-body dui-panel" id="dp-2" style="display:none">
+      <div class="dui-mets">
+        <div class="dm"><div class="dm-l">Total saved (all time)</div><div class="dm-v gr">$4,218</div><div class="dm-s">since connected</div></div>
+        <div class="dm"><div class="dm-l">Refunds analyzed</div><div class="dm-v">312</div><div class="dm-s">lifetime total</div></div>
+        <div class="dm"><div class="dm-l">No-return rate</div><div class="dm-v">62%</div><div class="dm-s">vs. 41% industry avg</div></div>
+        <div class="dm"><div class="dm-l">Avg. savings per refund</div><div class="dm-v gr">$11.20</div><div class="dm-s">per no-return decision</div></div>
+      </div>
+      <div class="dui-2col">
+        <div class="dui-sc" style="flex:1">
+          <div class="dui-sc-t">Monthly savings trend</div>
+          <div style="display:flex;align-items:flex-end;gap:6px;height:120px;padding-top:12px">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="background:var(--gb);border-radius:4px;width:100%;opacity:.3;height:32px"></div><span style="font-size:10px;color:var(--ink4)">Oct</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="background:var(--gb);border-radius:4px;width:100%;opacity:.4;height:48px"></div><span style="font-size:10px;color:var(--ink4)">Nov</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="background:var(--gb);border-radius:4px;width:100%;opacity:.5;height:56px"></div><span style="font-size:10px;color:var(--ink4)">Dec</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="background:var(--gb);border-radius:4px;width:100%;opacity:.6;height:68px"></div><span style="font-size:10px;color:var(--ink4)">Jan</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="background:var(--gb);border-radius:4px;width:100%;opacity:.8;height:84px"></div><span style="font-size:10px;color:var(--ink4)">Feb</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="background:var(--gb);border-radius:4px;width:100%;height:100px"></div><span style="font-size:10px;color:var(--ink4)">Mar</span></div>
+          </div>
+        </div>
+        <div class="dui-side">
+          <div class="dui-sc"><div class="dui-sc-t">Top return reasons</div><div class="dbar-r"><span class="dbar-l">Didn't like it</span><div class="dbar-bg"><div class="dbar-f" style="width:45%"></div></div><span class="dbar-p">45%</span></div><div class="dbar-r"><span class="dbar-l">Damaged</span><div class="dbar-bg"><div class="dbar-f" style="width:28%"></div></div><span class="dbar-p">28%</span></div><div class="dbar-r"><span class="dbar-l">Wrong item</span><div class="dbar-bg"><div class="dbar-f" style="width:17%"></div></div><span class="dbar-p">17%</span></div><div class="dbar-r"><span class="dbar-l">Other</span><div class="dbar-bg"><div class="dbar-f" style="width:10%"></div></div><span class="dbar-p">10%</span></div></div>
+          <div class="dui-sc"><div class="dui-sc-t">Top saved products</div><div style="font-size:12px;color:var(--ink3);line-height:2.1"><div>Face serum<span style="float:right;color:var(--gm);font-weight:500">$286 saved</span></div><div>Candle set<span style="float:right;color:var(--gm);font-weight:500">$214 saved</span></div><div>Cutting board<span style="float:right;color:var(--gm);font-weight:500">$189 saved</span></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: Settings -->
+    <div class="dui-body dui-panel" id="dp-3" style="display:none">
+      <div style="max-width:540px">
+        <div style="margin-bottom:28px"><div style="font-size:15px;font-weight:500;margin-bottom:6px">Automation level</div><div style="font-size:13px;color:var(--ink3);margin-bottom:14px">Choose how much AI handles automatically.</div><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="db" style="padding:6px 14px;cursor:pointer;border:1px solid var(--bd);font-size:12px" onclick="this.parentElement.querySelectorAll('.db').forEach(d=>{d.style.background='';d.style.color='';d.style.borderColor=''});this.style.background='var(--ink)';this.style.color='#fff';this.style.borderColor='var(--ink)'">Level 1 — Suggest</span><span class="db" style="padding:6px 14px;cursor:pointer;border:1px solid var(--ink);font-size:12px;background:var(--ink);color:#fff">Level 2 — Auto</span><span class="db" style="padding:6px 14px;cursor:pointer;border:1px solid var(--bd);font-size:12px" onclick="this.parentElement.querySelectorAll('.db').forEach(d=>{d.style.background='';d.style.color='';d.style.borderColor=''});this.style.background='var(--ink)';this.style.color='#fff';this.style.borderColor='var(--ink)'">Level 3 — Autopilot</span><span class="db" style="padding:6px 14px;cursor:pointer;border:1px solid var(--bd);font-size:12px" onclick="this.parentElement.querySelectorAll('.db').forEach(d=>{d.style.background='';d.style.color='';d.style.borderColor=''});this.style.background='var(--ink)';this.style.color='#fff';this.style.borderColor='var(--ink)'">Level 4 — Smart</span></div></div>
+        <div style="margin-bottom:28px"><div style="font-size:15px;font-weight:500;margin-bottom:6px">Auto-approve threshold</div><div style="font-size:13px;color:var(--ink3);margin-bottom:14px">Refunds below this amount are processed automatically.</div><div style="display:flex;align-items:center;gap:12px"><input type="range" min="10" max="100" value="35" style="flex:1;accent-color:var(--gb)" oninput="this.nextElementSibling.textContent='$'+this.value"><span style="font-family:'Inter',sans-serif;font-size:18px;font-weight:600;color:var(--ink);min-width:42px">$35</span></div></div>
+        <div style="margin-bottom:28px"><div style="font-size:15px;font-weight:500;margin-bottom:6px">Notifications</div><div style="font-size:13px;color:var(--ink3);margin-bottom:14px">Choose how you'd like to be notified.</div><div style="display:flex;flex-direction:column;gap:10px"><label style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink2);cursor:pointer"><input type="checkbox" checked style="accent-color:var(--gb);width:16px;height:16px"> Email digest (weekly)</label><label style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink2);cursor:pointer"><input type="checkbox" checked style="accent-color:var(--gb);width:16px;height:16px"> Slack alerts</label><label style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink2);cursor:pointer"><input type="checkbox" style="accent-color:var(--gb);width:16px;height:16px"> SMS for high-value refunds</label></div></div>
+        <div><div style="font-size:15px;font-weight:500;margin-bottom:6px">Connected store</div><div style="background:var(--surf2);border:1px solid var(--bd);border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">yourstore.myshopify.com</div><div style="font-size:11px;color:var(--ink4);margin-top:2px">Connected Mar 1, 2025</div></div><span style="font-size:11px;color:var(--gm);font-weight:500;background:var(--gl);padding:3px 10px;border-radius:100px">Active</span></div></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="flow-sec" id="flow">
+  <div class="flow-sec-bg"></div>
+  <div class="flow-inner">
+    <div class="flow-left rv"><canvas id="flow-canvas" style="width:100%;height:480px"></canvas></div>
+    <div class="flow-right rv d1">
+      <div class="pill lt">How it works in real time</div><h2 class="hl wh">Every event.<br>Analyzed and<br><em>acted on instantly.</em></h2>
+      <div class="flow-steps" id="flow-steps">
+        <div class="flow-step" data-step="0"><div class="fst-num">01</div><div class="fst-body"><div class="fst-title">Request received</div><div class="fst-desc">A refund request or stock threshold is triggered. RefundOS detects it instantly.</div><div class="fst-bar"><div class="fst-bar-fill" id="fb-0"></div></div></div></div>
+        <div class="flow-step" data-step="1"><div class="fst-num">02</div><div class="fst-body"><div class="fst-title">Six signals analyzed</div><div class="fst-desc">For refunds: 6 signals analyzed in parallel. For inventory: sales velocity, lead time, and safety stock computed.</div><div class="fst-bar"><div class="fst-bar-fill" id="fb-1"></div></div></div></div>
+        <div class="flow-step" data-step="2"><div class="fst-num">03</div><div class="fst-body"><div class="fst-title">Decision rendered</div><div class="fst-desc">Refunds are approved, denied, or escalated. Reorders are quantity-optimized and queued.</div><div class="fst-bar"><div class="fst-bar-fill" id="fb-2"></div></div></div></div>
+        <div class="flow-step" data-step="3"><div class="fst-num">04</div><div class="fst-body"><div class="fst-title">Money stays in your pocket</div><div class="fst-desc">Customers get fast resolutions. Warehouses never run dry. Margins stay protected.</div><div class="fst-bar"><div class="fst-bar-fill" id="fb-3"></div></div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="testi-sec" id="testimonials">
+  <div class="testi-hdr"><div><div class="pill">Merchant stories</div><h2 class="hl">Stores that stopped<br>doing ops manually</h2></div><p class="lede" style="color:var(--ink2)">Real results from Shopify merchants across every category.</p></div>
+  <div class="testi-grid">
+    <div class="tc rv"><span class="tc-stars">★★★★★</span><p class="tc-quote">"Two weeks in, I stopped checking refund requests manually. The AI handles 90% of them better than I ever did."</p><div class="tc-foot"><div class="tc-av">JM</div><div><div class="tc-name">Jake Morrison</div><div class="tc-role">Founder, CoastalWax Co.</div></div><div class="tc-saved">$1,240/mo</div></div></div>
+    <div class="tc rv d1"><span class="tc-stars">★★★★★</span><p class="tc-quote">"Connected in under 5 minutes. First day it flagged two products about to stock out. Reorder went through with one click."</p><div class="tc-foot"><div class="tc-av">SR</div><div><div class="tc-name">Sophie R.</div><div class="tc-role">Owner, Bloom & Thread</div></div><div class="tc-saved">$680/mo</div></div></div>
+    <div class="tc rv d2"><span class="tc-stars">★★★★★</span><p class="tc-quote">"The weekly ops report is the only email I actually open. Seeing refund savings and stockout prevention in one view — it's addictive."</p><div class="tc-foot"><div class="tc-av">DK</div><div><div class="tc-name">Dan K.</div><div class="tc-role">Co-founder, GearNest</div></div><div class="tc-saved">$2,100/mo</div></div></div>
+    <div class="tc rv"><span class="tc-stars">★★★★★</span><p class="tc-quote">"Our skincare line has zero resale value once opened. RefundOS auto-approves those refunds instantly. Reorders are already queued before we run low."</p><div class="tc-foot"><div class="tc-av">AL</div><div><div class="tc-name">Amara L.</div><div class="tc-role">Head of Ops, Veldt Studio</div></div><div class="tc-saved">$1,860/mo</div></div></div>
+    <div class="tc rv d1"><span class="tc-stars">★★★★★</span><p class="tc-quote">"Monday mornings used to mean catching up on returns and checking stock levels. Now it's all handled before I wake up."</p><div class="tc-foot"><div class="tc-av">TW</div><div><div class="tc-name">Tom W.</div><div class="tc-role">Owner, Northlight Goods</div></div><div class="tc-saved">$920/mo</div></div></div>
+    <div class="tc rv d2"><span class="tc-stars">★★★★★</span><p class="tc-quote">"Refund decisions, inventory alerts, auto-reorders — $69/month for all of it. We save 20x that."</p><div class="tc-foot"><div class="tc-av">MR</div><div><div class="tc-name">Maya R.</div><div class="tc-role">Founder, Drift Home Co.</div></div><div class="tc-saved">$1,400/mo</div></div></div>
+  </div>
+</section>
+
+<section class="price-sec" id="pricing">
+  <div class="price-hdr"><div class="pill">Pricing</div><h2 class="hl">Pays for itself in<br>the first week</h2><p class="lede">Most stores save more in month one than they pay all year.</p></div>
+  <div class="price-grid">
+    <div class="pc rv"><div class="pc-plan">Starter</div><div class="pc-price"><sup>$</sup>29</div><div class="pc-period">per month</div><div class="pc-div"></div><ul class="pc-feats"><li class="pc-feat">Up to 50 AI decisions/month</li><li class="pc-feat">Refund + inventory recommendations</li><li class="pc-feat">Suggest-only mode</li><li class="pc-feat">Unified ops dashboard</li><li class="pc-feat">Email alerts for stock risk</li><li class="pc-feat">1 Shopify store</li></ul><button class="pc-btn" onclick="location.href='login.html'">Start 14-day free trial</button><div class="pc-note">No credit card required</div></div>
+    <div class="pc hot rv d1"><div class="pc-pop">Most popular</div><div class="pc-plan">Growth</div><div class="pc-price"><sup>$</sup>69</div><div class="pc-period">per month</div><div class="pc-div"></div><ul class="pc-feats"><li class="pc-feat">Up to 300 AI decisions/month</li><li class="pc-feat">Refund + inventory automation</li><li class="pc-feat">Threshold-based auto-processing</li><li class="pc-feat">Stock depletion predictions</li><li class="pc-feat">Weekly ops report</li><li class="pc-feat">Slack + email + stock alerts</li><li class="pc-feat">3 Shopify stores</li></ul><button class="pc-btn" onclick="location.href='login.html'">Start 14-day free trial</button><div class="pc-note">No credit card required</div></div>
+    <div class="pc rv d2"><div class="pc-plan">Pro</div><div class="pc-price"><sup>$</sup>129</div><div class="pc-period">per month</div><div class="pc-div"></div><ul class="pc-feats"><li class="pc-feat">Unlimited AI decisions</li><li class="pc-feat">All automation levels</li><li class="pc-feat">Smart customer + SKU routing</li><li class="pc-feat">One-click auto-reorder execution</li><li class="pc-feat">Advanced ops analytics</li><li class="pc-feat">Priority support</li><li class="pc-feat">Unlimited stores</li></ul><button class="pc-btn" onclick="location.href='login.html'">Start 14-day free trial</button><div class="pc-note">No credit card required</div></div>
+  </div>
+</section>
+
+<section class="faq-sec" id="faq">
+  <div class="faq-layout">
+    <div><div class="pill">FAQ</div><h2 class="hl" style="font-size:38px">Questions<br>you probably<br>have</h2><p style="font-size:14px;color:var(--ink3);line-height:1.75;margin-top:14px;max-width:280px">Everything you need before connecting your store.</p><a href="#" class="faq-email"><span class="__cf_email__" data-cfemail="9df5f8f1f1f2ddeff8fbe8f3f9f2eeb3fef2f0">[email&#160;protected]</span> →</a></div>
+    <div class="faq-list rv">
+      <div class="faq-item open"><div class="faq-q" onclick="toggleFaq(this)">Does RefundOS handle both refunds and inventory?<span class="faq-arr">+</span></div><div class="faq-a">Yes. RefundOS has two AI engines: one for refund decisions (approve, deny, or escalate) and one for inventory (predict stockouts, recommend reorder quantities, and auto-execute orders). Both are configurable from suggest-only to full autopilot.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How does the inventory prediction work?<span class="faq-arr">+</span></div><div class="faq-a">RefundOS tracks 7-day, 14-day, and 30-day sales velocity per SKU. It factors in supplier lead time, safety stock thresholds, and seasonal patterns to predict when you'll run out — and recommends exactly how much to reorder.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">What Shopify data does RefundOS use?<span class="faq-arr">+</span></div><div class="faq-a">Orders, customers, products, and inventory levels — read access for analysis, write access for refund processing and inventory updates. We never touch payment details. Revoke access anytime from Shopify admin.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">What if the AI makes a wrong refund or reorder decision?<span class="faq-arr">+</span></div><div class="faq-a">Every decision is logged with full reasoning. Refunds are reversible within 24 hours. Reorders can be cancelled before supplier confirmation. Fraud-likely and high-value items always escalate to manual review.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Can I control what gets automated?<span class="faq-arr">+</span></div><div class="faq-a">Completely. Set automation levels independently for refunds and inventory. Use dollar thresholds, customer tiers, product categories, and risk scores to control what gets auto-processed and what requires your approval.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How fast can I get started?<span class="faq-arr">+</span></div><div class="faq-a">Under 2 minutes. Connect your Shopify store via OAuth, set your initial preferences, and RefundOS starts analyzing immediately. No developer, no code, no app store. Cancel anytime with one click.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-sec" id="cta">
+  <div class="cta-glow"></div>
+  <div class="cta-inner"><div class="pill lt">Get started today</div><h2 class="hl wh">Your next refund or stockout<br>should be handled by AI</h2><p>Connect your Shopify store. RefundOS handles refunds and inventory from day one. Free for 14 days.</p><div class="cta-form"><input class="cta-inp" type="text" id="cta-url" placeholder="yourstore.myshopify.com"/><button class="cta-go" onclick="handleCTA()">Connect store →</button></div><div class="cta-note">14-day free trial &nbsp;·&nbsp; All features &nbsp;·&nbsp; Cancel anytime</div><div class="cta-trust"><div><span class="ct-n">340<em>+</em></span><span class="ct-l">active merchants</span></div><div><span class="ct-n">$380<em>K</em></span><span class="ct-l">saved last month</span></div><div><span class="ct-n">4.9<em>★</em></span><span class="ct-l">average rating</span></div><div><span class="ct-n">99.9<em>%</em></span><span class="ct-l">uptime SLA</span></div></div></div>
+</section>
+
+<footer>
+  <div class="ft-top"><div><div class="ft-logo">RefundOS</div><div class="ft-tag">The AI operations layer for Shopify — automated refunds, predictive inventory, and smart reordering.</div></div><div class="ft-cols"><div><div class="ft-ct">Product</div><ul class="ft-links"><li><a href="#how">How it works</a></li><li><a href="#ai-engine">AI refund engine</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#dashboard">Dashboard</a></li></ul></div><div><div class="ft-ct">Company</div><ul class="ft-links"><li><a href="#problem">Why RefundOS</a></li><li><a href="#testimonials">Stories</a></li><li><a href="#levels">Automation levels</a></li><li><a href="#faq">FAQ</a></li></ul></div><div><div class="ft-ct">Legal &amp; Support</div><ul class="ft-links"><li><a href="#" onclick="openModal('contact');return false">Contact us</a></li><li><a href="#" onclick="openModal('demo-book');return false">Book a demo</a></li><li><a href="#" onclick="openModal('privacy');return false">Privacy policy</a></li><li><a href="#" onclick="openModal('terms');return false">Terms of service</a></li></ul></div></div></div>
+  <div class="ft-bot"><span class="ft-copy">© 2025 RefundOS, Inc. All rights reserved.</span><div class="ft-legal"><a href="#" onclick="openModal('privacy');return false">Privacy</a><a href="#" onclick="openModal('terms');return false">Terms</a><a href="#" onclick="openModal('contact');return false">Contact</a></div></div>
+</footer>
+
+<!-- LEGAL MODALS -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-content" id="modal-content"></div>
+  </div>
+</div>
+
+
+<script>
+const rvObs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');rvObs.unobserve(x.target)}})},{threshold:0,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.rv').forEach(el=>rvObs.observe(el));
+setTimeout(()=>{document.querySelectorAll('.rv:not(.in)').forEach(el=>{const r=el.getBoundingClientRect();if(r.top<window.innerHeight)el.classList.add('in')})},100);
+
+const burger=document.getElementById('nav-burger'),mobileMenu=document.getElementById('mobile-menu');
+burger&&burger.addEventListener('click',()=>{mobileMenu.classList.toggle('open');document.body.style.overflow=mobileMenu.classList.contains('open')?'hidden':''});
+function closeMobileMenu(){mobileMenu&&mobileMenu.classList.remove('open');document.body.style.overflow=''}
+
+(function(){const el=document.getElementById('tw-word');if(!el)return;const phrases=["All of it.","Handled.","Automated.","Done."];let pi=0,ci=0,deleting=false,paused=false;const typeSpeed=68,deleteSpeed=38,pauseAfter=2200,pauseBefore=400;function tick(){const phrase=phrases[pi];if(paused){paused=false;setTimeout(tick,pauseBefore);return}if(!deleting){ci++;el.textContent=phrase.slice(0,ci);if(ci===phrase.length){paused=true;deleting=true;setTimeout(tick,pauseAfter);return}}else{ci--;el.textContent=phrase.slice(0,ci);if(ci===0){deleting=false;pi=(pi+1)%phrases.length;setTimeout(tick,pauseBefore);return}}setTimeout(tick,deleting?deleteSpeed:typeSpeed)}setTimeout(()=>{el.textContent='';ci=0;deleting=false;tick()},1800)})();
+
+function toggleFaq(el){const item=el.closest('.faq-item');const was=item.classList.contains('open');document.querySelectorAll('.faq-item').forEach(i=>i.classList.remove('open'));if(!was)item.classList.add('open')}
+function handleCTA(){const v=document.getElementById('cta-url').value.trim();const btn=document.querySelector('.cta-go');if(v){btn.textContent='Connecting…';btn.style.opacity='.6';setTimeout(()=>{btn.textContent='✓ Connected!';btn.style.background='var(--gm)';btn.style.opacity='1';setTimeout(()=>{location.href='login.html'},600)},1100)}else document.getElementById('cta-url').focus()}
+function toggleLevel(card){card.classList.toggle('selected')}
+
+function switchDashTab(idx,tabEl){
+  document.querySelectorAll('.dui-tab').forEach(t=>t.classList.remove('on'));
+  tabEl.classList.add('on');
+  document.querySelectorAll('.dui-panel').forEach((p,i)=>{
+    if(i===idx){p.style.display='';p.style.animation='none';p.offsetHeight;p.style.animation='panel-in .4s cubic-bezier(.16,1,.3,1) both';}
+    else{p.style.display='none';}
+  });
+}
+
+(function(){const scenarios=[{total:'$13',vals:['−$6.50','−$3.80','−$2.50','−$1.20']},{total:'$11',vals:['−$5.20','−$2.90','−$2.10','−$0.90']},{total:'$14',vals:['−$7.80','−$3.60','−$2.80','−$1.40']},{total:'$12',vals:['−$6.10','−$3.30','−$2.20','−$1.10']}];function buildSlot(el,values){const wrap=document.createElement('span');wrap.className='pa-slot';const inner=document.createElement('span');inner.className='pa-slot-inner';inner.style.height=(values.length*100)+'%';values.forEach(v=>{const d=document.createElement('span');d.className='pa-slot-digit';d.textContent=v;d.style.height=(100/values.length)+'%';d.style.display='flex';d.style.alignItems='center';d.style.justifyContent='center';inner.appendChild(d)});wrap.appendChild(inner);return{wrap,inner}}function buildValSlot(el,values){const wrap=document.createElement('span');wrap.className='pa-val-wrap';const inner=document.createElement('span');inner.className='pa-val-inner';inner.style.height=(values.length*100)+'%';values.forEach(v=>{const d=document.createElement('span');d.className='pa-val-item';d.textContent=v;d.style.height=(100/values.length)+'%';d.style.display='flex';d.style.alignItems='center';inner.appendChild(d)});wrap.appendChild(inner);return{wrap,inner}}const aside=document.querySelector('.prob-aside');if(!aside)return;const totalEl=document.getElementById('pa-total');const totalVals=scenarios.map(s=>s.total);let totalSlot=null;if(totalEl){const{wrap,inner}=buildSlot(totalEl,totalVals);wrap.style.fontSize='inherit';wrap.style.lineHeight='1';wrap.style.height='1em';totalSlot=inner;totalEl.textContent='';totalEl.appendChild(wrap)}const valSlots=[];[0,1,2,3].forEach(i=>{const el=document.getElementById('pa-v'+i);if(!el)return;const vals=scenarios.map(s=>s.vals[i]);const{wrap,inner}=buildValSlot(el,vals);valSlots[i]=inner;el.textContent='';el.appendChild(wrap)});let si=0;function rollTo(idx){if(totalSlot)totalSlot.style.transform=`translateY(-${idx*25}%)`;valSlots.forEach(inner=>{if(inner)inner.style.transform=`translateY(-${idx*25}%)`})}requestAnimationFrame(()=>{if(totalSlot){const h=totalSlot.parentElement.offsetHeight||64;totalSlot.parentElement.style.height=h+'px'}});const obs=new IntersectionObserver(entries=>{if(entries[0].isIntersecting){setInterval(()=>{si=(si+1)%scenarios.length;rollTo(si)},2600);obs.disconnect()}},{threshold:.3});obs.observe(aside)})();
+
+const nodeAngles=[-90,-30,30,90,150,210];
+const factorData=[
+  {icon:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--gm)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',label:'Return cost vs item value',desc:'If shipping + labor + time exceeds what you\'d recover, requiring a return is economically irrational.',scenarios:[{l:'$8 item, $6 return cost',r:'yes',t:'No return — refund directly'},{l:'$120 item, $9 return cost',r:'no',t:'Return — high recovery value'},{l:'$35 item, borderline',r:'maybe',t:'Other factors decide'}],insight:'Items under $28 almost always cost more to return than to refund outright.',formula:'<span class="hi">No return</span> if: return_cost > item_value × resale_prob\nreturn_cost = shipping + $3.50 labor + $1.20 inspection'},
+  {icon:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--gm)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',label:'Customer lifetime value',desc:'A $340 LTV customer on a $22 item is fundamentally different than a first-time buyer.',scenarios:[{l:'VIP — 8+ orders, $600+ LTV',r:'yes',t:'Instant returnless refund'},{l:'First order, no history',r:'maybe',t:'Standard review'},{l:'3 refunds in 60 days',r:'no',t:'Elevated — manual review'}],insight:'Merchants using LTV-weighted handling see 34% higher repeat purchase rates.',formula:'LTV_score = (total_spend × recency_weight) + (order_count × 12)\n<span class="hi">High LTV</span> → generous handling → protects retention'},
+  {icon:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--gm)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>',label:'Resale probability',desc:'Can this item be sold again? Opened fragrance? Almost never. Sealed electronics? Different story.',scenarios:[{l:'Opened skincare / fragrance',r:'yes',t:'No return — unsellable'},{l:'Sealed electronics',r:'no',t:'Return — resale value high'},{l:'Clothing, wrong size',r:'maybe',t:'Depends on brand policy'}],insight:'48 pre-configured category policies ship with RefundOS based on 2M+ decisions.',formula:'resale_prob = base_category_rate × condition_factor × demand_factor\n<span class="lo">Low resale</span> → return has no recovery value'},
+  {icon:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--gm)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',label:'Return reason',desc:'NLP reads the stated reason and classifies it into 12 categories.',scenarios:[{l:'"Doesn\'t match description"',r:'no',t:'Return + investigate quality'},{l:'"Changed my mind"',r:'yes',t:'Returnless refund likely'},{l:'"Arrived damaged"',r:'no',t:'Photo proof + return label'}],insight:'58% of return reasons are subjective preference — exactly where requiring return costs more.',formula:'reason_class → policy_map → decision_weight\n<span class="hi">Subjective</span> → flexible &nbsp; <span class="lo">Defect</span> → stricter'},
+  {icon:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--gm)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',label:'Refund history',desc:'Has this customer returned before? The AI builds a behavioral profile automatically.',scenarios:[{l:'0 refunds in 12 months',r:'yes',t:'Low risk — generous handling'},{l:'2 refunds in 30 days',r:'maybe',t:'Elevated — more scrutiny'},{l:'5+ refunds across stores',r:'no',t:'High risk — manual flag'}],insight:'4% of customers account for 40%+ of return volume.',formula:'risk_score = refund_frequency × recency_decay + pattern_score\n<span class="lo">High risk</span> → override automation → escalate'},
+  {icon:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--gm)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',label:'Product category',desc:'Different product types have fundamentally different return economics.',scenarios:[{l:'Candles / fragrance',r:'yes',t:'Almost never return'},{l:'Footwear — size issue',r:'no',t:'Return — resellable'},{l:'Electronics — defect',r:'no',t:'Return + warranty check'}],insight:'Category rules pre-configured from 2M+ decisions.',formula:'category_policy = base_rules[category] + merchant_overrides\n<span class="hi">Customize</span> any rule from your dashboard'},
+];
+let currentNode=0;
+function positionNodes(){const container=document.querySelector('.orbit-container');if(!container)return;const W=container.offsetWidth,H=container.offsetHeight,cx=W/2,cy=H/2,r=Math.min(W,H)*0.30;const svgEl=document.getElementById('orbit-svg');svgEl.setAttribute('viewBox',`0 0 ${W} ${H}`);svgEl.querySelectorAll('circle').forEach((c,i)=>{c.setAttribute('cx',cx);c.setAttribute('cy',cy);c.setAttribute('r',(i===0)?r*0.88:r*1.16)});const linesG=document.getElementById('orbit-lines'),partG=document.getElementById('orbit-particles');linesG.innerHTML='';partG.innerHTML='';nodeAngles.forEach((deg,i)=>{const rad=deg*Math.PI/180,nx=cx+r*Math.cos(rad),ny=cy+r*Math.sin(rad),el=document.getElementById('fn-'+i);if(el){el.style.left=nx+'px';el.style.top=ny+'px'}const line=document.createElementNS('http://www.w3.org/2000/svg','line');line.setAttribute('id','line-'+i);line.setAttribute('x1',cx);line.setAttribute('y1',cy);line.setAttribute('x2',nx);line.setAttribute('y2',ny);line.setAttribute('class','orbit-line active');linesG.appendChild(line);for(let p=0;p<2;p++){const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');circle.setAttribute('id',`particle-${i}-${p}`);circle.setAttribute('r','2');circle.setAttribute('fill','#4aaa78');circle.setAttribute('opacity','0');partG.appendChild(circle)}});const centerEl=document.getElementById('orbit-center');if(centerEl){centerEl.style.left=cx+'px';centerEl.style.top=cy+'px'}}
+function startAllParticles(){const container=document.querySelector('.orbit-container');if(!container)return;const W=container.offsetWidth,H=container.offsetHeight,cx=W/2,cy=H/2,r=Math.min(W,H)*0.30;nodeAngles.forEach((deg,i)=>{const rad=deg*Math.PI/180,nx=cx+r*Math.cos(rad),ny=cy+r*Math.sin(rad);[0,1].forEach(p=>{const el=document.getElementById(`particle-${i}-${p}`);if(!el)return;let t=(p===0)?0:0.5;const speed=0.008+i*0.001;function tick(){t+=speed;if(t>1)t=0;const x=nx+(cx-nx)*t,y=ny+(cy-ny)*t;el.setAttribute('cx',x);el.setAttribute('cy',y);const fade=t<0.06||t>0.94?0:Math.min(t/0.08,1,(1-t)/0.08)*1.0;el.setAttribute('opacity',fade);requestAnimationFrame(tick)}setTimeout(tick,i*200+p*400)})})}
+function selectNode(i){document.querySelectorAll('.factor-node').forEach((n,idx)=>n.classList.toggle('active',idx===i));document.querySelectorAll('.orbit-line').forEach((l,idx)=>{l.style.stroke=idx===i?'rgba(74,170,120,.9)':'rgba(74,170,120,.25)';l.style.strokeWidth=idx===i?'2':'1';l.style.strokeDasharray=idx===i?'none':'4 6'});currentNode=i;renderDetail(i)}
+let autoTimer=setInterval(()=>{const sec=document.getElementById('ai-engine');if(sec&&sec.querySelector('.rv.in'))selectNode((currentNode+1)%6)},4800);
+function renderDetail(i){const f=factorData[i],wrap=document.getElementById('ai-detail-wrap');if(!wrap)return;wrap.style.display='block';wrap.style.transition='opacity .35s cubic-bezier(.4,0,.2,1), transform .35s cubic-bezier(.16,1,.3,1)';wrap.style.opacity='0';wrap.style.transform='translateY(6px)';setTimeout(()=>{const scHtml=f.scenarios.map(s=>`<div class="adw-sc"><span class="adw-sc-label">${s.l}</span><span class="adw-sc-tag ${s.r}">${s.t}</span></div>`).join('');document.getElementById('adw-header').innerHTML=`<div class="adw-icon">${f.icon}</div><div><div class="adw-meta">Factor ${i+1} of 6</div><div class="adw-title">${f.label}</div></div>`;document.getElementById('adw-body').innerHTML=`<div class="adw-col"><div class="adw-col-title">How it works</div><div class="adw-desc" style="margin-bottom:16px">${f.desc}</div><div class="adw-col-title">Insight</div><div class="adw-insight">${f.insight}</div></div><div class="adw-col"><div class="adw-col-title">Example scenarios</div><div class="adw-scenarios" style="margin-bottom:14px">${scHtml}</div><div class="adw-formula">${f.formula.replace(/\n/g,'<br>')}</div></div>`;wrap.style.transform='translateY(0)';wrap.style.opacity='1'},240)}
+document.querySelectorAll('.factor-node').forEach(n=>n.addEventListener('click',()=>{clearInterval(autoTimer)}));
+
+window.addEventListener('load',()=>{positionNodes();selectNode(0);startAllParticles();initFlowCanvas()});
+window.addEventListener('resize',()=>{positionNodes();initFlowCanvas()});
+
+function initFlowCanvas(){const canvas=document.getElementById('flow-canvas');if(!canvas)return;const wrap=canvas.parentElement,W=wrap.offsetWidth||500,H=wrap.offsetHeight||480;canvas.width=W*devicePixelRatio;canvas.height=H*devicePixelRatio;canvas.style.width=W+'px';canvas.style.height=H+'px';const ctx=canvas.getContext('2d');ctx.scale(devicePixelRatio,devicePixelRatio);const PAD=38,col1x=Math.max(PAD,W*.14),cx=W*.50,cy=H*.50,col3x=Math.min(W-PAD,W*.86);const inSpacing=Math.max(72,(H-PAD*2)/5),inStartY=cy-inSpacing*2.5;const inputLabels=['Item value','Customer LTV','Resale odds','Return reason','History','Category'];const inputs=inputLabels.map((label,i)=>({label,x:col1x,y:inStartY+i*inSpacing}));const outSpacing=Math.max(80,(H-PAD*2)/3.2),outStartY=cy-outSpacing;const outcomes=[{label:'No return',color:'#4aaa78'},{label:'Return',color:'#f87171'},{label:'Partial',color:'#fbbf24'}].map((o,i)=>({...o,x:col3x,y:outStartY+i*outSpacing}));const particles=[];function spawnParticle(from,to,color){particles.push({x:from.x,y:from.y,tx:to.x,ty:to.y,t:Math.random(),speed:0.004+Math.random()*0.003,color,size:2.5+Math.random()*1.5})}inputs.forEach(inp=>{for(let j=0;j<3;j++)spawnParticle(inp,{x:cx,y:cy},'#4aaa78')});outcomes.forEach(out=>{for(let j=0;j<2;j++)spawnParticle({x:cx,y:cy},out,out.color)});let t=0;function draw(){ctx.clearRect(0,0,W,H);inputs.forEach(inp=>{const grad=ctx.createLinearGradient(inp.x,inp.y,cx,cy);grad.addColorStop(0,'rgba(74,170,120,.04)');grad.addColorStop(1,'rgba(74,170,120,.18)');ctx.beginPath();ctx.moveTo(inp.x,inp.y);ctx.lineTo(cx,cy);ctx.strokeStyle=grad;ctx.lineWidth=1;ctx.stroke()});outcomes.forEach(out=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(out.x,out.y);ctx.strokeStyle='rgba(74,170,120,.12)';ctx.lineWidth=1;ctx.stroke()});[1,2,3].forEach(ri=>{const pr=36+ri*14+Math.sin(t*.8+ri)*4,alpha=Math.max(0,.12-ri*.035+Math.sin(t*.6+ri)*.02);ctx.beginPath();ctx.arc(cx,cy,pr,0,Math.PI*2);ctx.strokeStyle=`rgba(74,170,120,${alpha})`;ctx.lineWidth=1;ctx.stroke()});const cglo=ctx.createRadialGradient(cx,cy,10,cx,cy,80);cglo.addColorStop(0,'rgba(74,170,120,.18)');cglo.addColorStop(1,'rgba(74,170,120,0)');ctx.beginPath();ctx.arc(cx,cy,80,0,Math.PI*2);ctx.fillStyle=cglo;ctx.fill();const cgr=ctx.createRadialGradient(cx,cy-8,4,cx,cy,38);cgr.addColorStop(0,'#1e2d1e');cgr.addColorStop(1,'#0d1610');ctx.beginPath();ctx.arc(cx,cy,38,0,Math.PI*2);ctx.fillStyle=cgr;ctx.fill();ctx.beginPath();ctx.arc(cx,cy,38,0,Math.PI*2);ctx.strokeStyle='rgba(74,170,120,.55)';ctx.lineWidth=1.5;ctx.stroke();ctx.font='600 12px Inter,sans-serif';ctx.fillStyle='rgba(255,255,255,.92)';ctx.textAlign='center';ctx.fillText('RefundOS',cx,cy-1);ctx.font='400 9px Inter,sans-serif';ctx.fillStyle='rgba(74,170,120,.8)';ctx.fillText('AI core',cx,cy+12);inputs.forEach((inp,i)=>{const pulse=Math.sin(t*.9+i*.8)*2,nr=30+pulse*.3;const ig=ctx.createRadialGradient(inp.x,inp.y,nr*.3,inp.x,inp.y,nr*1.8);ig.addColorStop(0,'rgba(74,170,120,.08)');ig.addColorStop(1,'rgba(74,170,120,0)');ctx.beginPath();ctx.arc(inp.x,inp.y,nr*1.8,0,Math.PI*2);ctx.fillStyle=ig;ctx.fill();ctx.beginPath();ctx.arc(inp.x,inp.y,nr,0,Math.PI*2);ctx.fillStyle='rgba(15,25,18,.85)';ctx.fill();ctx.beginPath();ctx.arc(inp.x,inp.y,nr,0,Math.PI*2);ctx.strokeStyle='rgba(74,170,120,.28)';ctx.lineWidth=1.2;ctx.stroke();const words=inp.label.split(' ');ctx.font='500 10px Inter,sans-serif';ctx.fillStyle='rgba(255,255,255,.92)';ctx.textAlign='center';if(words.length<=2){ctx.fillText(words[0],inp.x,inp.y+(words.length===1?3:-4));if(words[1])ctx.fillText(words[1],inp.x,inp.y+8)}else{ctx.fillText(words.slice(0,Math.ceil(words.length/2)).join(' '),inp.x,inp.y-4);ctx.fillText(words.slice(Math.ceil(words.length/2)).join(' '),inp.x,inp.y+8)}});outcomes.forEach(out=>{const hex=out.color,r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);const og=ctx.createRadialGradient(out.x,out.y,10,out.x,out.y,52);og.addColorStop(0,`rgba(${r},${g},${b},.12)`);og.addColorStop(1,`rgba(${r},${g},${b},0)`);ctx.beginPath();ctx.arc(out.x,out.y,52,0,Math.PI*2);ctx.fillStyle=og;ctx.fill();ctx.beginPath();ctx.arc(out.x,out.y,32,0,Math.PI*2);ctx.fillStyle=`rgba(${r},${g},${b},.12)`;ctx.fill();ctx.beginPath();ctx.arc(out.x,out.y,32,0,Math.PI*2);ctx.strokeStyle=`rgba(${r},${g},${b},.5)`;ctx.lineWidth=1.5;ctx.stroke();const tw=ctx.measureText(out.label).width+20;ctx.beginPath();ctx.roundRect(out.x-tw/2,out.y-8,tw,18,9);ctx.fillStyle=`rgba(${r},${g},${b},.18)`;ctx.fill();ctx.font='600 11px Inter,sans-serif';ctx.fillStyle='#fff';ctx.textAlign='center';ctx.fillText(out.label,out.x,out.y+5)});for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.t+=p.speed;if(p.t>1){const isInput=Math.random()>.35;const src=isInput?inputs[Math.floor(Math.random()*inputs.length)]:{x:cx,y:cy};const dst=isInput?{x:cx,y:cy}:outcomes[Math.floor(Math.random()*outcomes.length)];p.t=0;p.x=src.x;p.y=src.y;p.tx=dst.x;p.ty=dst.y;p.color=isInput?'#4aaa78':dst.color||'#4aaa78';continue}const px=p.x+(p.tx-p.x)*p.t,py=p.y+(p.ty-p.y)*p.t;const fade=p.t<.1?p.t/.1:p.t>.9?(1-p.t)/.1:1;const hex=p.color,r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);ctx.beginPath();ctx.arc(px,py,p.size,0,Math.PI*2);ctx.fillStyle=`rgba(${r},${g},${b},${fade*.9})`;ctx.fill();ctx.beginPath();ctx.arc(px,py,p.size*2.5,0,Math.PI*2);ctx.fillStyle=`rgba(${r},${g},${b},${fade*.15})`;ctx.fill()}t+=0.016;requestAnimationFrame(draw)}draw();const steps=document.querySelectorAll('.flow-step');const stepDuration=2200;let activeStep=0;function advanceStep(){steps.forEach((s,i)=>{s.classList.toggle('lit',i===activeStep);const fill=document.getElementById('fb-'+i);if(fill){if(i===activeStep){fill.style.transition='width '+(stepDuration/1000)+'s linear';fill.style.width='100%'}else if(i<activeStep){fill.style.transition='none';fill.style.width='100%'}else{fill.style.transition='none';fill.style.width='0'}}});activeStep=(activeStep+1)%steps.length;setTimeout(advanceStep,stepDuration)}advanceStep()}
+
+/* ══ COUNT-UP ANIMATION ══ */
+(function(){
+  const els=document.querySelectorAll('.countup');
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(!e.isIntersecting)return;
+      const el=e.target;
+      if(el.dataset.done)return;
+      el.dataset.done='1';
+      const target=parseFloat(el.dataset.target);
+      const prefix=el.dataset.prefix||'';
+      const decimals=parseInt(el.dataset.decimals)||0;
+      const fmt=el.dataset.format==='comma';
+      const duration=1400;
+      const start=performance.now();
+      function step(now){
+        const p=Math.min((now-start)/duration,1);
+        const eased=1-Math.pow(1-p,3);
+        let val=eased*target;
+        if(decimals>0)val=val.toFixed(decimals);
+        else val=Math.round(val);
+        let str=prefix+val;
+        if(fmt)str=prefix+Number(val).toLocaleString('en-US');
+        el.textContent=str;
+        if(p<1)requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    });
+  },{threshold:.3});
+  els.forEach(el=>obs.observe(el));
+})();
+
+/* ══ CANVAS PERF: pause when offscreen ══ */
+(function(){
+  const canvases=['flow-canvas','signal-canvas'];
+  const states={};
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      states[e.target.id]=e.isIntersecting;
+    });
+  },{threshold:0,rootMargin:'100px'});
+  canvases.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){obs.observe(el);states[id]=false;}
+  });
+  window._canvasVisible=function(id){return states[id]!==false;};
+})();
+
+function drawSignal(){const canvas=document.getElementById('signal-canvas');if(!canvas)return;const ctx=canvas.getContext('2d');const W=canvas.width,H=canvas.height;let t=0;function frame(){ctx.clearRect(0,0,W,H);[[0.018,18,'rgba(74,170,120,.6)'],[0.012,12,'rgba(74,170,120,.35)'],[0.025,8,'rgba(74,170,120,.15)']].forEach(([freq,amp,color])=>{ctx.beginPath();for(let x=0;x<W;x++){const y=H/2+Math.sin(x*freq+t)*amp+Math.sin(x*freq*1.8+t*1.3)*(amp*.4);x===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.stroke()});t+=0.03;requestAnimationFrame(frame)}frame()}
+drawSignal();
+
+/* ══ MODAL PAGES ══ */
+const modalPages={
+  privacy:{
+    title:'Privacy Policy',
+    sub:'Last updated January 2025',
+    body:`<p>RefundOS ("we", "our", "us") is committed to protecting the privacy of our users. This Privacy Policy explains how we collect, use, and safeguard your information when you use our service.</p>
+<h3>Information We Collect</h3>
+<p>When you connect your Shopify store, we access order data, customer records, and product catalogs through Shopify's OAuth API. We use this data solely to analyze refund requests and provide recommendations.</p>
+<h3>How We Use Your Data</h3>
+<p>Your data is used exclusively to power our AI refund analysis engine. We never sell, share, or distribute your store data to third parties. All data is encrypted in transit and at rest using AES-256 encryption.</p>
+<h3>Data Retention</h3>
+<p>We retain your data for the duration of your active subscription plus 30 days. Upon cancellation, all store data is permanently deleted within 30 days. You can request immediate deletion at any time.</p>
+<h3>Your Rights</h3>
+<p>You have the right to access, correct, or delete your personal data at any time. You can revoke our Shopify access instantly from your Shopify admin panel. For any privacy concerns, contact us at hello@refundos.com.</p>`
+  },
+  terms:{
+    title:'Terms of Service',
+    sub:'Last updated January 2025',
+    body:`<p>By using RefundOS, you agree to the following terms and conditions. Please read them carefully before connecting your store.</p>
+<h3>Service Description</h3>
+<p>RefundOS provides AI-powered refund and inventory management and automation for Shopify merchants. Our service analyzes refund requests and either recommends or automatically processes decisions based on your configured automation level.</p>
+<h3>Account & Billing</h3>
+<p>You must provide accurate store information to use our service. Subscriptions are billed monthly. You may cancel at any time with no penalties — cancellation takes effect at the end of your current billing period.</p>
+<h3>Automated Actions</h3>
+<p>When using automation Levels 2–4, RefundOS will process refund decisions automatically. All automated actions are logged and reversible within 24 hours. You remain ultimately responsible for all refund decisions made on your store.</p>
+<h3>Limitation of Liability</h3>
+<p>RefundOS is provided "as is" without warranties of any kind. We are not liable for any losses resulting from automated refund decisions. Our total liability is limited to the fees paid in the preceding 12 months.</p>
+<h3>Modifications</h3>
+<p>We may update these terms from time to time. Continued use of the service after changes constitutes acceptance of the new terms. We will notify you of significant changes via email.</p>`
+  },
+  contact:{
+    title:'Contact Us',
+    sub:'We typically respond within 24 hours',
+    body:`<p>Have a question, need help with your account, or want to learn more about RefundOS? We'd love to hear from you.</p>
+<div class="modal-form">
+  <div class="form-row">
+    <input type="text" placeholder="Your name" id="cf-name"/>
+    <input type="email" placeholder="Email address" id="cf-email"/>
+  </div>
+  <input type="text" placeholder="Subject" id="cf-subject"/>
+  <textarea placeholder="How can we help?" id="cf-msg"></textarea>
+  <button onclick="submitContact()">Send message →</button>
+</div>`
+  },
+  'demo-book':{
+    title:'Book a Demo',
+    sub:'See RefundOS in action with your own store data',
+    body:`<p>Get a personalized 15-minute walkthrough. We'll show you exactly how much your store could save based on your actual refund volume and product categories.</p>
+<div class="modal-form">
+  <div class="form-row">
+    <input type="text" placeholder="Your name" id="bd-name"/>
+    <input type="email" placeholder="Email address" id="bd-email"/>
+  </div>
+  <input type="text" placeholder="Your Shopify store URL" id="bd-store"/>
+  <input type="text" placeholder="Monthly refund volume (approx.)" id="bd-volume"/>
+  <textarea placeholder="Anything specific you'd like to discuss?" id="bd-notes"></textarea>
+  <button onclick="submitBooking()">Request demo →</button>
+</div>`
+  }
+};
+
+function openModal(id){
+  const page=modalPages[id];
+  if(!page)return;
+  const mc=document.getElementById('modal-content');
+  mc.innerHTML=`<div class="modal-sub">${page.sub}</div><h2>${page.title}</h2>${page.body}`;
+  const overlay=document.getElementById('modal-overlay');
+  overlay.classList.add('open');
+  document.body.style.overflow='hidden';
+  requestAnimationFrame(()=>{overlay.style.opacity='1'});
+}
+function closeModal(){
+  const overlay=document.getElementById('modal-overlay');
+  overlay.style.opacity='0';
+  setTimeout(()=>{overlay.classList.remove('open');document.body.style.overflow=''},350);
+}
+function submitContact(){
+  const btn=event.target;
+  btn.textContent='Sending…';btn.style.opacity='.6';
+  setTimeout(()=>{btn.textContent='✓ Message sent!';btn.style.background='var(--gm)';btn.style.opacity='1'},1000);
+}
+function submitBooking(){
+  const btn=event.target;
+  btn.textContent='Requesting…';btn.style.opacity='.6';
+  setTimeout(()=>{btn.textContent='✓ Demo requested!';btn.style.background='var(--gm)';btn.style.opacity='1'},1000);
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+/* ══ HERO GLOW FOLLOW CURSOR ══ */
+(function(){
+  const hero=document.querySelector('.hero');
+  const glow=document.querySelector('.hero-glow');
+  if(!hero||!glow)return;
+  let targetX=50,targetY=38,curX=50,curY=38;
+  let running=false;
+  function lerp(a,b,t){return a+(b-a)*t}
+  function animate(){
+    curX=lerp(curX,targetX,0.04);
+    curY=lerp(curY,targetY,0.04);
+    glow.style.setProperty('--gx',curX.toFixed(1)+'%');
+    glow.style.setProperty('--gy',curY.toFixed(1)+'%');
+    if(Math.abs(curX-targetX)>0.01||Math.abs(curY-targetY)>0.01){
+      requestAnimationFrame(animate);
+    }else{running=false;}
+  }
+  function startAnim(){if(!running){running=true;requestAnimationFrame(animate)}}
+  hero.addEventListener('mousemove',e=>{
+    const rect=hero.getBoundingClientRect();
+    targetX=((e.clientX-rect.left)/rect.width)*100;
+    targetY=((e.clientY-rect.top)/rect.height)*100;
+    startAnim();
+  });
+  hero.addEventListener('mouseleave',()=>{
+    targetX=50;targetY=38;
+    startAnim();
+  });
+})();
+
+/* ══ MOMENTUM SMOOTH SCROLL ══ */
+(function(){
+  let scrollTarget=null;
+  let scrollStart=0;
+  let scrollDistance=0;
+  let scrollTime=0;
+  const duration=1200;
+  function easeOutExpo(t){return t===1?1:1-Math.pow(2,-10*t)}
+  function scrollStep(now){
+    if(!scrollTime)scrollTime=now;
+    const elapsed=now-scrollTime;
+    const progress=Math.min(elapsed/duration,1);
+    const eased=easeOutExpo(progress);
+    window.scrollTo(0,scrollStart+scrollDistance*eased);
+    if(progress<1)requestAnimationFrame(scrollStep);
+  }
+  document.querySelectorAll('a[href^="#"]').forEach(a=>{
+    a.addEventListener('click',e=>{
+      const href=a.getAttribute('href');
+      if(href==='#')return;
+      const el=document.querySelector(href);
+      if(!el)return;
+      e.preventDefault();
+      scrollTarget=el;
+      scrollStart=window.pageYOffset;
+      scrollDistance=el.getBoundingClientRect().top-72;
+      scrollTime=0;
+      requestAnimationFrame(scrollStep);
+    });
+  });
+})();
+
+</script>
+</body>
+</html>

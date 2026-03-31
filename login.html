@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RefundOS — Log in</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;color:#202223}
+.loading-screen{position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:999;transition:opacity .3s}
+.loading-screen.hide{opacity:0;pointer-events:none}
+.split{display:flex;min-height:100vh;width:100%}
+.left{flex:1;display:flex;align-items:center;justify-content:center;padding:40px;background:#fff}
+.right{flex:1;background:linear-gradient(160deg,#004c3f 0%,#008060 50%,#00a47c 100%);display:flex;flex-direction:column;justify-content:center;padding:48px;position:relative;overflow:hidden}
+.right::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h60v60H0z' fill='none'/%3E%3Cpath d='M30 0v60M0 30h60' stroke='rgba(255,255,255,.04)' stroke-width='1'/%3E%3C/svg%3E")}
+.fw{width:100%;max-width:380px}
+.logo{margin-bottom:40px}.logo a{font-size:22px;font-weight:700;text-decoration:none;color:#202223}.logo a em{font-style:italic;color:#008060}
+.fw h1{font-size:24px;font-weight:700;margin-bottom:6px}
+.fw .sub{font-size:13px;color:#6d7175;margin-bottom:32px}
+.g-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 16px;border-radius:8px;border:1px solid #e1e3e5;background:#fff;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;transition:all .12s;color:#202223;box-shadow:0 1px 0 rgba(0,0,0,.05)}
+.g-btn:hover{background:#f6f6f7;border-color:#c9cccf}
+.g-btn[disabled]{opacity:.5;cursor:not-allowed}
+.dv{display:flex;align-items:center;gap:12px;margin:24px 0;color:#8c9196;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.dv::before,.dv::after{content:'';flex:1;height:1px;background:#e1e3e5}
+.field{margin-bottom:16px}.field label{display:block;font-size:13px;font-weight:600;color:#202223;margin-bottom:5px}
+.field input{width:100%;padding:9px 12px;border:1px solid #c9cccf;border-radius:8px;font-size:13px;font-family:inherit;outline:none;transition:border-color .12s,box-shadow .12s}
+.field input:focus{border-color:#008060;box-shadow:0 0 0 2px rgba(0,128,96,.15)}
+.field input::placeholder{color:#c9cccf}
+.opts{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;font-size:12px}
+.opts label{display:flex;align-items:center;gap:6px;color:#6d7175;cursor:pointer}
+.opts input[type=checkbox]{accent-color:#008060;width:14px;height:14px}
+.opts a{color:#008060;text-decoration:none;font-weight:500}.opts a:hover{text-decoration:underline}
+.sbtn{width:100%;padding:10px;border-radius:8px;background:#202223;color:#fff;border:none;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .12s;box-shadow:0 1px 0 rgba(0,0,0,.05)}
+.sbtn:hover{background:#000}.sbtn[disabled]{opacity:.5;cursor:not-allowed}
+.bot{text-align:center;margin-top:24px;font-size:13px;color:#6d7175}
+.bot a{color:#008060;font-weight:500;text-decoration:none;cursor:pointer}.bot a:hover{text-decoration:underline}
+.bk{margin-top:20px;text-align:center}.bk a{font-size:12px;color:#8c9196;text-decoration:none}.bk a:hover{color:#6d7175}
+.err-msg{background:#fed3d1;color:#d72c0d;font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:16px;display:none}
+.err-msg.show{display:block}
+.success-msg{background:#e4f5ee;color:#008060}
+.rc{position:relative;z-index:1}
+.right h2{font-size:26px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:8px}
+.right .tl{font-size:14px;color:rgba(255,255,255,.7);line-height:1.6;margin-bottom:40px}
+.rv{background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:20px;margin-bottom:16px}
+.rv .stars{color:#fbbf24;font-size:13px;margin-bottom:8px;letter-spacing:2px}
+.rv .qt{font-size:13px;color:rgba(255,255,255,.9);line-height:1.65;font-style:italic;margin-bottom:12px}
+.rv .au{display:flex;align-items:center;gap:10px}
+.rv .av{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700}
+.rv .nm{font-size:12px;font-weight:600;color:#fff}.rv .rl{font-size:11px;color:rgba(255,255,255,.5)}
+.sr{display:flex;gap:24px;margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,.12)}
+.si .sn{font-size:22px;font-weight:700;color:#fff}.si .sl{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
+.modal.show{display:flex}
+.modal-box{background:#fff;border-radius:16px;padding:32px;max-width:400px;width:calc(100% - 32px);box-shadow:0 8px 32px rgba(0,0,0,.18);text-align:center}
+.modal-box h2{font-size:20px;font-weight:700;margin-bottom:6px}
+.modal-box p{font-size:13px;color:#6d7175;margin-bottom:28px;line-height:1.6}
+.modal-btns{display:flex;gap:10px}
+.modal-btns button{flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .12s}
+.m-skip{border:1px solid #e1e3e5;background:#fff;color:#202223}.m-skip:hover{background:#f6f6f7}
+.m-go{border:none;background:#008060;color:#fff;font-weight:600}.m-go:hover{background:#006e52}
+@media(max-width:900px){.right{display:none}.left{padding:24px}.fw{max-width:100%}}
+@media(max-width:480px){.fw h1{font-size:20px}.g-btn{font-size:12px;padding:9px 12px}.sbtn{font-size:13px}}
+</style>
+</head>
+<body>
+
+<!-- Loading screen while Firebase checks auth state -->
+<div class="loading-screen" id="loading">
+  <div style="text-align:center">
+    <div style="font-size:22px;font-weight:700;margin-bottom:8px">Refund<em style="font-style:italic;color:#008060">OS</em></div>
+    <div style="font-size:12px;color:#8c9196">Loading...</div>
+  </div>
+</div>
+
+<div class="split">
+  <div class="left">
+    <div class="fw">
+      <div class="logo"><a href="/">Refund<em>OS</em></a></div>
+      <h1 id="form-title">Welcome back</h1>
+      <p class="sub" id="form-sub">Log in to manage your store operations</p>
+      <div id="err" class="err-msg"></div>
+
+      <button class="g-btn" id="google-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Continue with Google
+      </button>
+
+      <div class="dv">or continue with email</div>
+
+      <form id="auth-form">
+        <div class="field" id="name-field" style="display:none">
+          <label>Full name</label>
+          <input type="text" id="name-input" placeholder="Your name" />
+        </div>
+        <div class="field">
+          <label>Email address</label>
+          <input type="email" id="email-input" placeholder="you@company.com" required />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="pw-input" placeholder="Enter your password" required minlength="6" />
+        </div>
+        <div class="field" id="pw2-field" style="display:none">
+          <label>Confirm password</label>
+          <input type="password" id="pw2-input" placeholder="Confirm password" />
+        </div>
+        <div class="opts" id="opts-row">
+          <label><input type="checkbox" checked /> Remember me</label>
+          <a href="#" id="forgot-btn">Forgot password?</a>
+        </div>
+        <button class="sbtn" type="submit" id="submit-btn">Log in</button>
+      </form>
+
+      <div class="bot">
+        <span id="mode-text">Don't have an account?</span> <a id="mode-link">Create account</a>
+      </div>
+      <div class="bk"><a href="/">Back to homepage</a></div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="rc">
+      <h2>Trusted by 340+ Shopify merchants worldwide</h2>
+      <p class="tl">Join store owners who automated their refund decisions and inventory management with AI.</p>
+      <div class="rv"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><div class="qt">"We stopped manually reviewing every refund request. RefundOS handles 87% of them automatically now."</div><div class="au"><div class="av">JK</div><div><div class="nm">James K.</div><div class="rl">Founder, Minimal Supply Co.</div></div></div></div>
+      <div class="rv"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><div class="qt">"The stock prediction caught a potential stockout 6 days early. One click reorder saved us $8K in sales."</div><div class="au"><div class="av">SL</div><div><div class="nm">Sarah L.</div><div class="rl">Operations Lead, Evergreen Home</div></div></div></div>
+      <div class="rv"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><div class="qt">"Setup took under 2 minutes. The ROI was obvious within the first week."</div><div class="au"><div class="av">MR</div><div><div class="nm">Mike R.</div><div class="rl">CEO, TechGear Direct</div></div></div></div>
+      <div class="sr">
+        <div class="si"><div class="sn">$420</div><div class="sl">avg. monthly savings</div></div>
+        <div class="si"><div class="sn">10 sec</div><div class="sl">avg. decision time</div></div>
+        <div class="si"><div class="sn">87%</div><div class="sl">automation rate</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- First-time modal -->
+<div class="modal" id="first-modal">
+  <div class="modal-box">
+    <div style="width:48px;height:48px;background:#e4f5ee;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#008060" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <h2>Welcome to RefundOS</h2>
+    <p>Is this your first time?<br>We can give you a quick tour of the dashboard.</p>
+    <div class="modal-btns">
+      <button class="m-skip" id="skip-btn">Skip, go to dashboard</button>
+      <button class="m-go" id="tour-btn">Yes, show me around</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    GoogleAuthProvider,
+    signInWithPopup,
+    sendPasswordResetEmail,
+    updateProfile
+  } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyBlBGDrjeCAJbeY9xqOOd7GOZV9edHQie8",
+    authDomain: "refundos-d6342.firebaseapp.com",
+    projectId: "refundos-d6342",
+    storageBucket: "refundos-d6342.firebasestorage.app",
+    messagingSenderId: "555518126161",
+    appId: "1:555518126161:web:4c5da3ad9135c06bbbb070"
+  });
+
+  const auth = getAuth(app);
+  const gProvider = new GoogleAuthProvider();
+  let isSignUp = false;
+  let authReady = false;
+
+  // ─── Wait for auth state before showing UI ───
+  onAuthStateChanged(auth, (user) => {
+    console.log("[Auth] state changed:", user ? user.email : "no user");
+    document.getElementById("loading").classList.add("hide");
+    authReady = true;
+    if (user) {
+      // Already logged in → go to dashboard
+      console.log("[Auth] already signed in, redirecting...");
+      try{localStorage.setItem("ros_user",JSON.stringify({email:auth.currentUser?.email||"",name:auth.currentUser?.displayName||""}))}catch(e){} window.location.href = "dashboard.html";
+    }
+  });
+
+  // ─── Google login ───
+  document.getElementById("google-btn").addEventListener("click", async () => {
+    const btn = document.getElementById("google-btn");
+    btn.disabled = true;
+    hideError();
+    console.log("[Auth] Google login started");
+
+    try {
+      const result = await signInWithPopup(auth, gProvider);
+      console.log("[Auth] Google success:", result.user.email);
+
+      // Check if new user by creationTime vs lastSignInTime
+      const meta = result.user.metadata;
+      const isNew = meta.creationTime === meta.lastSignInTime;
+      console.log("[Auth] isNew:", isNew);
+
+      if (isNew) {
+        try{localStorage.setItem("ros_user",JSON.stringify({email:auth.currentUser?.email||"",name:auth.currentUser?.displayName||""}))}catch(e){} window.location.href = "dashboard.html?onboarding=1";
+      } else {
+        try{localStorage.setItem("ros_user",JSON.stringify({email:auth.currentUser?.email||"",name:auth.currentUser?.displayName||""}))}catch(e){} window.location.href = "dashboard.html";
+      }
+    } catch (err) {
+      console.error("[Auth] Google error:", err.code, err.message);
+      if (err.code !== "auth/popup-closed-by-user" && err.code !== "auth/cancelled-popup-request") {
+        showError(friendlyError(err.code));
+      }
+      btn.disabled = false;
+    }
+  });
+
+  // ─── Email/Password submit ───
+  document.getElementById("auth-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email-input").value.trim();
+    const pw = document.getElementById("pw-input").value;
+    const btn = document.getElementById("submit-btn");
+    hideError();
+
+    if (isSignUp) {
+      const pw2 = document.getElementById("pw2-input").value;
+      const name = document.getElementById("name-input").value.trim();
+      if (pw !== pw2) { showError("Passwords do not match"); return; }
+      if (pw.length < 6) { showError("Password must be at least 6 characters"); return; }
+
+      btn.disabled = true; btn.textContent = "Creating account...";
+      console.log("[Auth] Creating account for:", email);
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pw);
+        if (name) await updateProfile(cred.user, { displayName: name });
+        console.log("[Auth] Account created:", cred.user.email);
+        document.getElementById("first-modal").classList.add("show");
+      } catch (err) {
+        console.error("[Auth] Signup error:", err.code, err.message);
+        showError(friendlyError(err.code));
+        btn.disabled = false; btn.textContent = "Create account";
+      }
+    } else {
+      btn.disabled = true; btn.textContent = "Logging in...";
+      console.log("[Auth] Logging in:", email);
+      try {
+        await signInWithEmailAndPassword(auth, email, pw);
+        console.log("[Auth] Login success");
+        try{localStorage.setItem("ros_user",JSON.stringify({email:auth.currentUser?.email||"",name:auth.currentUser?.displayName||""}))}catch(e){} window.location.href = "dashboard.html";
+      } catch (err) {
+        console.error("[Auth] Login error:", err.code, err.message);
+        showError(friendlyError(err.code));
+        btn.disabled = false; btn.textContent = "Log in";
+      }
+    }
+  });
+
+  // ─── Toggle login/signup ───
+  document.getElementById("mode-link").addEventListener("click", () => {
+    isSignUp = !isSignUp;
+    document.getElementById("form-title").textContent = isSignUp ? "Create your account" : "Welcome back";
+    document.getElementById("form-sub").textContent = isSignUp ? "Start your 14-day free trial" : "Log in to manage your store operations";
+    document.getElementById("submit-btn").textContent = isSignUp ? "Create account" : "Log in";
+    document.getElementById("mode-text").textContent = isSignUp ? "Already have an account?" : "Don't have an account?";
+    document.getElementById("mode-link").textContent = isSignUp ? "Log in" : "Create account";
+    document.getElementById("name-field").style.display = isSignUp ? "block" : "none";
+    document.getElementById("pw2-field").style.display = isSignUp ? "block" : "none";
+    document.getElementById("opts-row").style.display = isSignUp ? "none" : "flex";
+    hideError();
+  });
+
+  // ─── Forgot password ───
+  document.getElementById("forgot-btn").addEventListener("click", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email-input").value.trim();
+    if (!email) { showError("Enter your email address first"); return; }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showError("Password reset email sent. Check your inbox.");
+      const el = document.getElementById("err");
+      el.classList.add("success-msg");
+    } catch (err) {
+      console.error("[Auth] Reset error:", err.code);
+      showError(friendlyError(err.code));
+    }
+  });
+
+  // ─── Modal buttons ───
+  document.getElementById("skip-btn").addEventListener("click", () => {
+    try{localStorage.setItem("ros_user",JSON.stringify({email:auth.currentUser?.email||"",name:auth.currentUser?.displayName||""}))}catch(e){} window.location.href = "dashboard.html";
+  });
+  document.getElementById("tour-btn").addEventListener("click", () => {
+    try{localStorage.setItem("ros_user",JSON.stringify({email:auth.currentUser?.email||"",name:auth.currentUser?.displayName||""}))}catch(e){} window.location.href = "dashboard.html?onboarding=1";
+  });
+
+  // ─── Helpers ───
+  function showError(msg) {
+    const el = document.getElementById("err");
+    el.textContent = msg;
+    el.classList.add("show");
+    el.classList.remove("success-msg");
+    el.style.background = "#fed3d1"; el.style.color = "#d72c0d";
+  }
+  function hideError() {
+    const el = document.getElementById("err");
+    el.classList.remove("show", "success-msg");
+  }
+  function friendlyError(code) {
+    const m = {
+      "auth/email-already-in-use": "This email is already registered. Try logging in.",
+      "auth/invalid-email": "Please enter a valid email address.",
+      "auth/wrong-password": "Incorrect password. Try again or reset it.",
+      "auth/user-not-found": "No account found with this email. Create one below.",
+      "auth/weak-password": "Password must be at least 6 characters.",
+      "auth/too-many-requests": "Too many attempts. Please wait a moment.",
+      "auth/invalid-credential": "Incorrect email or password.",
+      "auth/popup-blocked": "Popup was blocked by your browser. Allow popups for this site.",
+      "auth/network-request-failed": "Network error. Check your connection.",
+      "auth/internal-error": "Server error. Please try again.",
+      "auth/unauthorized-domain": "This domain is not authorized. Add it in Firebase Console > Authentication > Settings > Authorized domains.",
+    };
+    return m[code] || `Error: ${code || "unknown"}. Please try again.`;
+  }
+</script>
+</body>
+</html>
